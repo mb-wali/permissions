@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"version"
 
 	"github.com/cyverse-de/configurate"
 	"github.com/cyverse-de/logcabin"
+	"github.com/cyverse-de/version"
 
 	_ "github.com/lib/pq"
 )
