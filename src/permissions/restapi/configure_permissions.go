@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"version"
 
 	"github.com/cyverse-de/configurate"
 	"github.com/cyverse-de/dbutil"
 	"github.com/cyverse-de/logcabin"
+	"github.com/cyverse-de/version"
 
 	errors "github.com/go-swagger/go-swagger/errors"
 	httpkit "github.com/go-swagger/go-swagger/httpkit"
