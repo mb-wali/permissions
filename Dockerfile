@@ -24,6 +24,7 @@ RUN cd /go/src/github.com/cyverse-de/permissions && \
     gb build && \
     cp bin/permissions-server /bin/permissions
 
+WORKDIR /
 EXPOSE 60000
 ENTRYPOINT ["permissions"]
 CMD ["--help"]
