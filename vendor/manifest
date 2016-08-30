@@ -113,6 +113,12 @@
 			"path": "/difflib"
 		},
 		{
+			"importpath": "github.com/spf13/viper",
+			"repository": "https://github.com/spf13/viper",
+			"revision": "16990631d4aa7e38f73dbbbf37fa13e67c648531",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/stretchr/testify/assert",
 			"repository": "https://github.com/stretchr/testify",
 			"revision": "d77da356e56a7428ad25149ca77381849a6a5232",
