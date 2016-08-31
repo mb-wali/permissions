@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"permissions/models"
+	"permissions/restapi"
 	perms_impl "permissions/restapi/impl/permissions"
 	perms "permissions/restapi/operations/permissions"
 	"strings"
@@ -104,40 +105,27 @@ func main() {
 	}
 
 	// Load the configuration file.
-	cfg, err := configurate.Init(*config)
-	if err != nil {
-		logcabin.Error.Fatal(err.Error())
-	}
-
-	// Retrieve the permissions database URI.
-	dburi, err := cfg.String("db.uri")
+	cfg, err := configurate.InitDefaults(*config, restapi.DefaultConfig)
 	if err != nil {
 		logcabin.Error.Fatal(err.Error())
 	}
 
 	// Establish the permissions database session.
+	dburi := cfg.GetString("db.uri")
 	db, err := sql.Open("postgres", dburi)
 	if err != nil {
 		logcabin.Error.Fatal(err.Error())
 	}
 
-	// Retrieve the Grouper database URI.
-	grouperDburi, err := cfg.String("grouperdb.uri")
-	if err != nil {
-		logcabin.Error.Fatal(err.Error())
-	}
-
 	// Establish the Grouper database session.
+	grouperDburi := cfg.GetString("grouperdb.uri")
 	grouperDb, err := sql.Open("postgres", grouperDburi)
 	if err != nil {
 		logcabin.Error.Fatal(err.Error())
 	}
 
 	// Retrieve the Grouper folder name prefix.
-	grouperFolderNamePrefix, err := cfg.String("grouperdb.folder_name_prefix")
-	if err != nil {
-		logcabin.Error.Fatal(err.Error())
-	}
+	grouperFolderNamePrefix := cfg.GetString("grouperdb.folder_name_prefix")
 
 	// Create a handler to add permissions to the database.
 	handler := perms_impl.BuildPutPermissionHandler(db)

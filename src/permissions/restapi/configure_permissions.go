@@ -17,7 +17,7 @@ import (
 	httpkit "github.com/go-swagger/go-swagger/httpkit"
 	swag "github.com/go-swagger/go-swagger/swag"
 	_ "github.com/lib/pq"
-	"github.com/olebedev/config"
+	"github.com/spf13/viper"
 
 	"permissions/clients/grouper"
 	"permissions/restapi/operations"
@@ -35,6 +35,16 @@ import (
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
+
+// The default permissions configuration.
+const DefaultConfig = `
+db:
+  uri: "postgresql://de:notprod@dedb:5432/permissions?sslmode=disable"
+
+grouperdb:
+  uri: "postgresql://de:notprod@adedb:5432/grouper?sslmode=disable"
+  folder_name_prefix: "iplant:de:docker-compose"
+`
 
 // Command line options that aren't managed by go-swagger.
 var options struct {
@@ -71,9 +81,9 @@ func initService() error {
 
 	var (
 		err error
-		cfg *config.Config
+		cfg *viper.Viper
 	)
-	if cfg, err = configurate.Init(options.CfgPath); err != nil {
+	if cfg, err = configurate.InitDefaults(options.CfgPath, DefaultConfig); err != nil {
 		return err
 	}
 
@@ -82,26 +92,14 @@ func initService() error {
 		return err
 	}
 
-	dburi, err := cfg.String("db.uri")
-	if err != nil {
-		return err
-	}
-
+	dburi := cfg.GetString("db.uri")
 	db, err = connector.Connect("postgres", dburi)
 	if err != nil {
 		return err
 	}
 
-	grouperDburi, err := cfg.String("grouperdb.uri")
-	if err != nil {
-		return err
-	}
-
-	grouperFolderNamePrefix, err := cfg.String("grouperdb.folder_name_prefix")
-	if err != nil {
-		return err
-	}
-
+	grouperDburi := cfg.GetString("grouperdb.uri")
+	grouperFolderNamePrefix := cfg.GetString("grouperdb.folder_name_prefix")
 	grouperClient, err = grouper.NewGrouperClient(grouperDburi, grouperFolderNamePrefix)
 	if err != nil {
 		return err
