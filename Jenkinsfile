@@ -15,8 +15,15 @@ node {
     sh "docker build --rm --build-arg git_commit=${git_commit} -t ${dockerRepo} ."
 
 
-    stage "Test"
-    sh "docker run --rm -w /go/src/github.com/cyverse-de/${repo} --entrypoint 'gb' ${dockerRepo} test"
+    try {
+        stage "Test"
+        dockerTestRunner = "test-${env.BUILD_TAG}"
+        sh "docker run --rm --name ${dockerTestRunner} -w /go/src/github.com/cyverse-de/${repo} --entrypoint 'gb' ${dockerRepo} test"
+    } finally {
+        sh returnStatus: true, script: "docker kill ${dockerTestRunner}"
+        sh returnStatus: true, script: "docker rm ${dockerTestRunner}"
+    }
+
 
     stage "Docker Push"
     sh "docker push ${dockerRepo}"
