@@ -1,11 +1,5 @@
 FROM golang:1.7-alpine
 
-ARG git_commit=unknown
-ARG version="2.9.0"
-
-LABEL org.cyverse.git-ref="$git_commit"
-LABEL org.cyverse.version="$version"
-
 COPY . /go/src/github.com/cyverse-de/permissions
 
 RUN apk update
@@ -31,3 +25,9 @@ WORKDIR /
 EXPOSE 60000
 ENTRYPOINT ["permissions"]
 CMD ["--help"]
+
+ARG git_commit=unknown
+ARG version="2.9.0"
+
+LABEL org.cyverse.git-ref="$git_commit"
+LABEL org.cyverse.version="$version"
