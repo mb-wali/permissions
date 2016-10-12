@@ -1,10 +1,10 @@
-FROM golang:1.7-alpine
+FROM discoenv/golang-base:master
+
+ENV CONF_TEMPLATE=/go/src/github.com/cyverse-de/permissions/permissions.yaml.tmpl
+ENV CONF_FILENAME=permissions.yaml
+ENV PROGRAM=permissions
 
 COPY . /go/src/github.com/cyverse-de/permissions
-
-RUN apk update
-
-RUN apk add git
 
 RUN git clone https://github.com/swagger-api/swagger-ui.git /tmp/swagger-ui \
     && cd /tmp/swagger-ui \
@@ -23,8 +23,6 @@ RUN cd /go/src/github.com/cyverse-de/permissions && \
 
 WORKDIR /
 EXPOSE 60000
-ENTRYPOINT ["permissions"]
-CMD ["--help"]
 
 ARG git_commit=unknown
 ARG version="2.9.0"

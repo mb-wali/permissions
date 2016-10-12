@@ -12,7 +12,7 @@ node('docker') {
 
         dockerRepo = "test-${env.BUILD_TAG}"
 
-        sh "docker build --rm --build-arg git_commit=${git_commit} -t ${dockerRepo} ."
+        sh "docker build --rm --pull --build-arg git_commit=${git_commit} -t ${dockerRepo} ."
 
 
         dockerTestRunner = "test-${env.BUILD_TAG}"
