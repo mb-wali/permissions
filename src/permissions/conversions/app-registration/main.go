@@ -62,7 +62,8 @@ func listApps(deDb *sql.DB) (*sql.Rows, error) {
 	               JOIN users u ON w.user_id = u.id
 	               WHERE a.id = aca.app_id
 	               AND ac.name = 'Apps under development'
-	               AND NOT w.is_public) AS username
+	               AND NOT w.is_public) AS username,
+	              a.integrator_name = 'Internal DE Tools' as is_internal
 	          FROM app_listing a`
 	return deDb.Query(query)
 }
@@ -211,12 +212,12 @@ func runConversion(db, deDb *sql.DB, deUsersGroupID string) error {
 
 	// Register each app in the permissions database.
 	var appID, username *string
-	var isPublic *bool
+	var isPublic, isInternal *bool
 	for apps.Next() {
-		if err := apps.Scan(&appID, &isPublic, &username); err != nil {
+		if err := apps.Scan(&appID, &isPublic, &username, &isInternal); err != nil {
 			return err
 		}
-		if *isPublic {
+		if *isPublic || *isInternal {
 			if err := registerApp(db, *appID, "group", deUsersGroupID, "read"); err != nil {
 				return err
 			}
