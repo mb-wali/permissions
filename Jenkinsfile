@@ -9,8 +9,8 @@ node('docker') {
             checkout scm
 
             parallel (
-                perms: { sh "docker build --pull --no-cache --rm -t ${dockerRepoPerms}"},
-                appreg: { sh "docker build --pull --no-cache --rm -f Dockerfile.app-reg -t ${dockerRepoAppReg}"},
+                perms: { sh "docker build --pull --no-cache --rm -t ${dockerRepoPerms} ."},
+                appreg: { sh "docker build --pull --no-cache --rm -f Dockerfile.app-reg -t ${dockerRepoAppReg} ."},
             )
         }
 
