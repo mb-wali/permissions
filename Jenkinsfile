@@ -66,7 +66,7 @@ node('docker') {
         }
     } catch (InterruptedException e) {
         currentBuild.result = 'ABORTED'
-        slackSend color 'warning', message: "ABORTED: ${slackJobDescription}"
+        slackSend color: 'warning', message: "ABORTED: ${slackJobDescription}"
         throw e
     } catch (e) {
         currentBuild.result = 'FAILED'
