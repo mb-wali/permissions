@@ -37,10 +37,7 @@ node('docker') {
                     sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
                     sh "docker tag ${dockerRepoAppReg} ${dockerPushRepoAppReg}"
 
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding',
-                                      credentialsId: 'jenkins-docker-credentials',
-                                      passwordVariable: 'DOCKER_PASSWORD',
-                                      usernameVariable: 'DOCKER_USERNAME']]) {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
                         sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
                                      -v /var/run/docker.sock:/var/run/docker.sock \\
                                      --rm --name ${dockerPusher} \\
