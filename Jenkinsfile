@@ -39,14 +39,15 @@ node('docker') {
 
                     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
                         sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
-                                     -v /var/run/docker.sock:/var/run/docker.sock \\
-                                     --rm --name ${dockerPusher} \\
-                                     docker:\$(docker version --format '{{ .Server.Verwsion }}') \\
-                                     sh -e -c \\
-                              'docker login -u \"\$DOCKER_USERNAME\" -p \"$DOCKER_PASSWORD\" && \\
-                               docker push ${dockerPushRepo} && \\
+                                         -v /var/run/docker.sock:/var/run/docker.sock \ \
+                                         --rm --name ${dockerPusher} \\
+                                         docker:\$(docker version --format '{{ .Server.Version }}') \\
+                                         sh -e -c \\
+                              'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
+                               docker push ${dockerPushRepoPerms} && \\
+                               docker push ${dockerPushRepoAppReg} && \\
                                docker logout'"""
-                    }
+``}
                 }
             }
         } finally {
