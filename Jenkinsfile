@@ -29,7 +29,7 @@ node('docker') {
                 service = readProperties file: 'service.properties'
 
                 dockerPushRepoPerms = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
-                dockerPushRepoAppReg = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
+                dockerPushRepoAppReg = "${service.dockerUser}/app-registration:${env.BRANCH_NAME}"
 
                 lock("docker-push-perms-images") {
                     milestone 101
