@@ -1,0 +1,21 @@
+FROM discoenv/golang-base:master
+
+ENV CONF_TEMPLATE=/go/src/github.com/cyverse-de/permissions/permissions.yaml.tmpl
+ENV CONF_FILENAME=permissions.yaml
+ENV PROGRAM=app-registration
+
+COPY . /go/src/github.com/cyverse-de/permissions
+
+RUN go get github.com/constabulary/gb/...
+
+RUN cd /go/src/github.com/cyverse-de/permissions && \
+    gb build && \
+    cp bin/app-registration /bin/
+
+WORKDIR /
+
+ARG git_commit=unknown
+ARG version="2.9.0"
+
+LABEL org.cyverse.git-ref="$git_commit"
+LABEL org.cyverse.version="$version"

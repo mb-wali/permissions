@@ -2,41 +2,55 @@
 node('docker') {
     slackJobDescription = "job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
     try {
-        stage "Build"
-        checkout scm
+        dockerRepoPerms = "test-permissions-${env.BUILD_TAG}"
+        dockerRepoAppReg = "test-app-reg-${env.BUILD_TAG}"
 
-        service = readProperties file: 'service.properties'
+        stage("Build") {
+            checkout scm
 
-        git_commit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
-        echo git_commit
-
-        dockerRepo = "test-${env.BUILD_TAG}"
-
-        sh "docker build --rm --pull --build-arg git_commit=${git_commit} -t ${dockerRepo} ."
-
+            parallel (
+                perms: { sh "docker build --pull --no-cache --rm -t ${dockerRepoPerms}"},
+                appreg: { sh "docker build --pull --no-cache --rm -f Dockerfile.app-reg -t ${dockerRepoAppReg}"},
+            )
+        }
 
         dockerTestRunner = "test-${env.BUILD_TAG}"
         dockerPusher = "push-${env.BUILD_TAG}"
         try {
-            stage "Test"
-            sh "docker run --rm --name ${dockerTestRunner} -w /go/src/github.com/cyverse-de/${service.repo} --entrypoint 'gb' ${dockerRepo} test"
+            stage("Test") {
+                sh """docker run --rm --name ${dockerTestRunner} \\
+                                 -w /go/src/github.com/cyverse-de/permissions \\
+                                 --entrypoint 'gb' \\
+                                 ${dockerRepoPerms} test"""
+            }
 
             milestone 100
-            stage "Docker Push"
-            dockerPushRepo = "${service.dockerUser}/${service.repo}:${env.BRANCH_NAME}"
-            lock("docker-push-${dockerPushRepo}") {
-              milestone 101
-              sh "docker tag ${dockerRepo} ${dockerPushRepo}"
-              withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
-                  sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
-                                   -v /var/run/docker.sock:/var/run/docker.sock \\
-                                   --rm --name ${dockerPusher} \\
-                                   docker:\$(docker version --format '{{ .Server.Version }}') \\
-                                   sh -e -c \\
-                        'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
-                         docker push ${dockerPushRepo} && \\
-                         docker logout'"""
-              }
+            stage("Docker Push") {
+                service = readProperties file: 'service.properties'
+
+                dockerPushRepoPerms = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
+                dockerPushRepoAppReg = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
+
+                lock("docker-push-perms-images") {
+                    milestone 101
+
+                    sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
+                    sh "docker tag ${dockerRepoAppReg} ${dockerPushRepoAppReg}"
+
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding',
+                                      credentialsId: 'jenkins-docker-credentials',
+                                      passwordVariable: 'DOCKER_PASSWORD',
+                                      usernameVariable: 'DOCKER_USERNAME']]) {
+                        sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
+                                     -v /var/run/docker.sock:/var/run/docker.sock \\
+                                     --rm --name ${dockerPusher} \\
+                                     docker:\$(docker version --format '{{ .Server.Verwsion }}') \\
+                                     sh -e -c \\
+                              'docker login -u \"\$DOCKER_USERNAME\" -p \"$DOCKER_PASSWORD\" && \\
+                               docker push ${dockerPushRepo} && \\
+                               docker logout'"""
+                    }
+                }
             }
         } finally {
             sh returnStatus: true, script: "docker kill ${dockerTestRunner}"
@@ -45,14 +59,17 @@ node('docker') {
             sh returnStatus: true, script: "docker kill ${dockerPusher}"
             sh returnStatus: true, script: "docker rm ${dockerPusher}"
 
-            sh returnStatus: true, script: "docker rmi ${dockerRepo}"
+            sh returnStatus: true, script: "docker rmi ${dockerRepoPerms}"
+            sh returnStatus: true, script: "docker rmi ${dockerRepoAppReg}"
+
+            sh returnStatus: true, script: "docker rmi \$(docker images -qf 'dangling=true')"
         }
     } catch (InterruptedException e) {
-        currentBuild.result = "ABORTED"
-        slackSend color: 'warning', message: "ABORTED: ${slackJobDescription}"
+        currentBuild.result = 'ABORTED'
+        slackSend color 'warning', message: "ABORTED: ${slackJobDescription}"
         throw e
     } catch (e) {
-        currentBuild.result = "FAILED"
+        currentBuild.result = 'FAILED'
         sh "echo ${e}"
         slackSend color: 'danger', message: "FAILED: ${slackJobDescription}"
         throw e
