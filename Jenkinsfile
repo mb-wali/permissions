@@ -39,7 +39,7 @@ node('docker') {
 
                     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
                         sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
-                                         -v /var/run/docker.sock:/var/run/docker.sock \ \
+                                         -v /var/run/docker.sock:/var/run/docker.sock \\
                                          --rm --name ${dockerPusher} \\
                                          docker:\$(docker version --format '{{ .Server.Version }}') \\
                                          sh -e -c \\
