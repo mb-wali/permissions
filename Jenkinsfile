@@ -47,7 +47,7 @@ node('docker') {
                                docker push ${dockerPushRepoPerms} && \\
                                docker push ${dockerPushRepoAppReg} && \\
                                docker logout'"""
-``}
+                    }
                 }
             }
         } finally {
