@@ -8,9 +8,15 @@ node('docker') {
         stage("Build") {
             checkout scm
 
+            git_commit = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+            echo git_commit
+
+            descriptive_version = sh(returnStdout: true, script: 'git describe --long --tags --dirty --always').trim()
+            echo descriptive_version
+
             parallel (
-                perms: { sh "docker build --pull --no-cache --rm -t ${dockerRepoPerms} ."},
-                appreg: { sh "docker build --pull --no-cache --rm -f Dockerfile.app-reg -t ${dockerRepoAppReg} ."},
+                perms: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepoPerms} ."},
+                appreg: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -f Dockerfile.app-reg -t ${dockerRepoAppReg} ."},
             )
         }
 
@@ -31,24 +37,26 @@ node('docker') {
                 dockerPushRepoPerms = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
                 dockerPushRepoAppReg = "${service.dockerUser}/app-registration:${env.BRANCH_NAME}"
 
-                lock("docker-push-perms-images") {
+                lock("docker-push-${dockerPushRepoPerms}") {
                     milestone 101
+                    lock("docker-push-${dockerPushRepoAppReg}") {
+                        milestone 102
 
-                    sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
-                    sh "docker tag ${dockerRepoAppReg} ${dockerPushRepoAppReg}"
+                        sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
+                        sh "docker tag ${dockerRepoAppReg} ${dockerPushRepoAppReg}"
 
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
-                        sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
-                                         -v /var/run/docker.sock:/var/run/docker.sock \\
-                                         --rm --name ${dockerPusher} \\
-                                         docker:\$(docker version --format '{{ .Server.Version }}') \\
-                                         sh -e -c \\
-                              'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
-                               docker push ${dockerPushRepoPerms} && \\
-                               docker push ${dockerPushRepoAppReg} && \\
-                               docker logout'"""
-                    }
-                }
+                        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
+                            sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
+                                             -v /var/run/docker.sock:/var/run/docker.sock \\
+                                             --rm --name ${dockerPusher} \\
+                                             docker:\$(docker version --format '{{ .Server.Version }}') \\
+                                             sh -e -c \\
+                                  'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
+                                   docker push ${dockerPushRepoPerms} && \\
+                                   docker push ${dockerPushRepoAppReg} && \\
+                                   docker logout'"""
+                        }
+                }}
             }
         } finally {
             sh returnStatus: true, script: "docker kill ${dockerTestRunner}"
