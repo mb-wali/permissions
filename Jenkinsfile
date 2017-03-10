@@ -3,7 +3,6 @@ node('docker') {
     slackJobDescription = "job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
     try {
         dockerRepoPerms = "test-permissions-${env.BUILD_TAG}"
-        dockerRepoAppReg = "test-app-reg-${env.BUILD_TAG}"
         dockerRepoToolReg = "test-tool-reg-${env.BUILD_TAG}"
 
         stage("Build") {
@@ -17,7 +16,6 @@ node('docker') {
 
             parallel (
                 perms: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepoPerms} ."},
-                appreg: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -f Dockerfile.app-reg -t ${dockerRepoAppReg} ."},
                 toolreg: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -f Dockerfile.tool-reg -t ${dockerRepoToolReg} ."},
             )
         }
@@ -37,14 +35,12 @@ node('docker') {
                 service = readProperties file: 'service.properties'
 
                 dockerPushRepoPerms = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
-                dockerPushRepoAppReg = "${service.dockerUser}/app-registration:${env.BRANCH_NAME}"
                 dockerPushRepoToolReg = "${service.dockerUser}/tool-registration:${env.BRANCH_NAME}"
 
-                lock(resources: ["docker-push-${dockerPushRepoPerms}", "docker-push-${dockerPushRepoAppReg}", "docker-push-${dockerPushRepoToolReg}"]) {
+                lock(resources: ["docker-push-${dockerPushRepoPerms}", "docker-push-${dockerPushRepoToolReg}"]) {
                     milestone 101
 
                     sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
-                    sh "docker tag ${dockerRepoAppReg} ${dockerPushRepoAppReg}"
                     sh "docker tag ${dockerRepoToolReg} ${dockerPushRepoToolReg}"
 
                     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
@@ -55,7 +51,6 @@ node('docker') {
                                          sh -e -c \\
                               'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
                                docker push ${dockerPushRepoPerms} && \\
-                               docker push ${dockerPushRepoAppReg} && \\
                                docker push ${dockerPushRepoToolReg} && \\
                                docker logout'"""
                     }
@@ -69,7 +64,6 @@ node('docker') {
             sh returnStatus: true, script: "docker rm ${dockerPusher}"
 
             sh returnStatus: true, script: "docker rmi ${dockerRepoPerms}"
-            sh returnStatus: true, script: "docker rmi ${dockerRepoAppReg}"
             sh returnStatus: true, script: "docker rmi ${dockerRepoToolReg}"
 
             sh returnStatus: true, script: "docker rmi \$(docker images -qf 'dangling=true')"
