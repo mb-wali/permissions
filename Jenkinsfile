@@ -67,6 +67,11 @@ node('docker') {
             sh returnStatus: true, script: "docker rmi ${dockerRepoAppReg}"
 
             sh returnStatus: true, script: "docker rmi \$(docker images -qf 'dangling=true')"
+
+            step([$class: 'hudson.plugins.jira.JiraIssueUpdater',
+                    issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'],
+                    scm: scm,
+                    labels: [ "permissions-${descriptive_version}" ]])
         }
     } catch (InterruptedException e) {
         currentBuild.result = 'ABORTED'
