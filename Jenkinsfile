@@ -15,8 +15,20 @@ node('docker') {
             echo descriptive_version
 
             parallel (
-                perms: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepoPerms} ."},
-                toolreg: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -f Dockerfile.tool-reg -t ${dockerRepoToolReg} ."},
+                perms: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepoPerms} ."
+                         image_sha_perms = sh(returnStdout: true, script: "docker inspect -f '{{ .Config.Image }}' ${dockerRepoPerms}").trim()
+                         echo image_sha_perms
+
+                         writeFile(file: "${dockerRepoPerms}.docker-image-sha", text: "${image_sha_perms}")
+                         fingerprint "${dockerRepoPerms}.docker-image-sha"
+                },
+                toolreg: { sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -f Dockerfile.tool-reg -t ${dockerRepoToolReg} ."
+                         image_sha_toolreg = sh(returnStdout: true, script: "docker inspect -f '{{ .Config.Image }}' ${dockerRepoToolReg}").trim()
+                         echo image_sha_toolreg
+
+                         writeFile(file: "${dockerRepoToolReg}.docker-image-sha", text: "${image_sha_toolreg}")
+                         fingerprint "${dockerRepoToolReg}.docker-image-sha"
+                },
             )
         }
 
