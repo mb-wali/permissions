@@ -37,24 +37,26 @@ node('docker') {
                 dockerPushRepoPerms = "${service.dockerUser}/permissions:${env.BRANCH_NAME}"
                 dockerPushRepoToolReg = "${service.dockerUser}/tool-registration:${env.BRANCH_NAME}"
 
-                lock(resources: ["docker-push-${dockerPushRepoPerms}", "docker-push-${dockerPushRepoToolReg}"]) {
+                lock("docker-push-${dockerPushRepoPerms}") {
                     milestone 101
+                    lock("docker-push-${dockerPushRepoToolReg}") {
+                        milestone 102
 
-                    sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
-                    sh "docker tag ${dockerRepoToolReg} ${dockerPushRepoToolReg}"
+                        sh "docker tag ${dockerRepoPerms} ${dockerPushRepoPerms}"
+                        sh "docker tag ${dockerRepoToolReg} ${dockerPushRepoToolReg}"
 
-                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
-                        sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
-                                         -v /var/run/docker.sock:/var/run/docker.sock \\
-                                         --rm --name ${dockerPusher} \\
-                                         docker:\$(docker version --format '{{ .Server.Version }}') \\
-                                         sh -e -c \\
-                              'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
-                               docker push ${dockerPushRepoPerms} && \\
-                               docker push ${dockerPushRepoToolReg} && \\
-                               docker logout'"""
-                    }
-                }
+                        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins-docker-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME']]) {
+                            sh """docker run -e DOCKER_USERNAME -e DOCKER_PASSWORD \\
+                                             -v /var/run/docker.sock:/var/run/docker.sock \\
+                                             --rm --name ${dockerPusher} \\
+                                             docker:\$(docker version --format '{{ .Server.Version }}') \\
+                                             sh -e -c \\
+                                  'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
+                                   docker push ${dockerPushRepoPerms} && \\
+                                   docker push ${dockerPushRepoToolReg} && \\
+                                   docker logout'"""
+                        }
+                }}
             }
         } finally {
             sh returnStatus: true, script: "docker kill ${dockerTestRunner}"
