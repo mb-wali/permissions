@@ -19,3 +19,7 @@ func (gc *MockGrouperClient) GroupsForSubject(subjectId string) ([]*GroupInfo, e
 func (gc *MockGrouperClient) AddSourceIDToPermissions(_ []*models.Permission) error {
 	return nil
 }
+
+func (gc *MockGrouperClient) AddSourceIDToPermission(_ *models.Permission) error {
+	return nil
+}

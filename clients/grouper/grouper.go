@@ -17,6 +17,7 @@ type GroupInfo struct {
 type Grouper interface {
 	GroupsForSubject(string) ([]*GroupInfo, error)
 	AddSourceIDToPermissions([]*models.Permission) error
+	AddSourceIDToPermission(*models.Permission) error
 }
 
 // Note: the grouper client is intended to be a read-only client. Explicit transactions are not
@@ -81,6 +82,7 @@ func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permissi
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	// Build a map from subject ID to source ID.
 	m := make(map[string]string)
@@ -99,4 +101,8 @@ func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permissi
 	}
 
 	return nil
+}
+
+func (gc *GrouperClient) AddSourceIDToPermission(permission *models.Permission) error {
+	return gc.AddSourceIDToPermissions([]*models.Permission{permission})
 }

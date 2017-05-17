@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
@@ -11,14 +12,20 @@ import (
 )
 
 func grantPermissionInternalServerError(reason string) middleware.Responder {
-	return permissions.NewGrantPermissionInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewGrantPermissionInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func grantPermissionBadRequest(reason string) middleware.Responder {
-	return permissions.NewGrantPermissionBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewGrantPermissionBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
-func BuildGrantPermissionHandler(db *sql.DB) func(permissions.GrantPermissionParams) middleware.Responder {
+func BuildGrantPermissionHandler(
+	db *sql.DB, grouperClient grouper.Grouper,
+) func(permissions.GrantPermissionParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{
 		InternalServerError: grantPermissionInternalServerError,
@@ -68,6 +75,12 @@ func BuildGrantPermissionHandler(db *sql.DB) func(permissions.GrantPermissionPar
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
+			logcabin.Error.Print(err)
+			return grantPermissionInternalServerError(err.Error())
+		}
+
+		// Add the subject source ID to the permission object.
+		if err := grouperClient.AddSourceIDToPermission(permission); err != nil {
 			logcabin.Error.Print(err)
 			return grantPermissionInternalServerError(err.Error())
 		}

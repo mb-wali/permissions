@@ -201,7 +201,7 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	)
 
 	api.PermissionsGrantPermissionHandler = permissions.GrantPermissionHandlerFunc(
-		permissions_impl.BuildGrantPermissionHandler(db),
+		permissions_impl.BuildGrantPermissionHandler(db, grouperClient),
 	)
 
 	api.PermissionsRevokePermissionHandler = permissions.RevokePermissionHandlerFunc(

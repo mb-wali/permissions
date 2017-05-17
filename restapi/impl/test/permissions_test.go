@@ -32,7 +32,8 @@ func grantPermissionAttempt(
 ) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildGrantPermissionHandler(db)
+	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	handler := impl.BuildGrantPermissionHandler(db, grouperClient)
 
 	// Attempt to add the permission.
 	req := &models.PermissionGrantRequest{Subject: subject, Resource: resource, PermissionLevel: level}
