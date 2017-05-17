@@ -21,9 +21,6 @@ RUN go install github.com/cyverse-de/permissions/... \
 WORKDIR /
 EXPOSE 60000
 
-ENTRYPOINT ["permissions"]
-CMD ["--help"]
-
 ARG git_commit=unknown
 ARG version="2.9.0"
 ARG descriptive_version=unknown
