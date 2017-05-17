@@ -13,15 +13,21 @@ import (
 )
 
 func bySubjectAndResourceTypeOk(perms []*models.Permission) middleware.Responder {
-	return permissions.NewBySubjectAndResourceTypeOK().WithPayload(&models.PermissionList{perms})
+	return permissions.NewBySubjectAndResourceTypeOK().WithPayload(
+		&models.PermissionList{Permissions: perms},
+	)
 }
 
 func bySubjectAndResourceTypeInternalServerError(reason string) middleware.Responder {
-	return permissions.NewBySubjectAndResourceTypeInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectAndResourceTypeInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func bySubjectAndResourceTypeBadRequest(reason string) middleware.Responder {
-	return permissions.NewBySubjectAndResourceTypeBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectAndResourceTypeBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildBySubjectAndResourceTypeHandler(
@@ -97,6 +103,12 @@ func BuildBySubjectAndResourceTypeHandler(
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
+			logcabin.Error.Print(err)
+			return bySubjectAndResourceTypeInternalServerError(err.Error())
+		}
+
+		// Add the subject source ID to the response body.
+		if err := grouperClient.AddSourceIDToPermissions(perms); err != nil {
 			logcabin.Error.Print(err)
 			return bySubjectAndResourceTypeInternalServerError(err.Error())
 		}
