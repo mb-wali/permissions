@@ -2,6 +2,7 @@ package test
 
 import (
 	"database/sql"
+	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 	"testing"
@@ -97,7 +98,8 @@ func putPermission(db *sql.DB, subjectType, subjectId, resourceType, resourceNam
 func listPermissionsAttempt(db *sql.DB) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildListPermissionsHandler(db)
+	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	handler := impl.BuildListPermissionsHandler(db, grouperClient)
 
 	// Attempt to list the permissions.
 	return handler(permissions.NewListPermissionsParams())

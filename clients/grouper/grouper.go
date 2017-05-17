@@ -4,8 +4,9 @@ import (
 	"database/sql"
 
 	"github.com/cyverse-de/dbutil"
+	"github.com/cyverse-de/permissions/models"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type GroupInfo struct {
@@ -15,6 +16,7 @@ type GroupInfo struct {
 
 type Grouper interface {
 	GroupsForSubject(string) ([]*GroupInfo, error)
+	AddSourceIDToPermissions([]*models.Permission) error
 }
 
 // Note: the grouper client is intended to be a read-only client. Explicit transactions are not
@@ -62,4 +64,39 @@ func (gc *GrouperClient) GroupsForSubject(subjectId string) ([]*GroupInfo, error
 	}
 
 	return groups, nil
+}
+
+func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permission) error {
+
+	// Get a list of subject identifiers.
+	subjectIDs := make([]string, 0)
+	for _, permission := range permissions {
+		subjectIDs = append(subjectIDs, string(permission.Subject.SubjectID))
+	}
+
+	// Query the database.
+	query := `SELECT subject_id, subject_source FROM grouper_members
+            WHERE subject_id = ANY($1)`
+	rows, err := gc.db.Query(query, pq.Array(subjectIDs))
+	if err != nil {
+		return err
+	}
+
+	// Build a map from subject ID to source ID.
+	m := make(map[string]string)
+	for rows.Next() {
+		var subjectID, sourceID string
+		if err := rows.Scan(&subjectID, &sourceID); err != nil {
+			return err
+		}
+		m[subjectID] = sourceID
+	}
+
+	// Add the subject IDs to the permission objects.
+	for _, permission := range permissions {
+		sourceID := m[string(permission.Subject.SubjectID)]
+		permission.Subject.SubjectSourceID = models.SubjectSourceID(sourceID)
+	}
+
+	return nil
 }

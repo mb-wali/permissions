@@ -7,10 +7,19 @@ import (
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
 	"github.com/cyverse-de/logcabin"
+	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func BuildListPermissionsHandler(db *sql.DB) func(permissions.ListPermissionsParams) middleware.Responder {
+func internalServerError(reason string) *permissions.ListPermissionsInternalServerError {
+	return permissions.NewListPermissionsInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
+}
+
+func BuildListPermissionsHandler(
+	db *sql.DB, grouper grouper.Grouper,
+) func(permissions.ListPermissionsParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(permissions.ListPermissionsParams) middleware.Responder {
@@ -19,8 +28,7 @@ func BuildListPermissionsHandler(db *sql.DB) func(permissions.ListPermissionsPar
 		tx, err := db.Begin()
 		if err != nil {
 			logcabin.Error.Print(err)
-			reason := err.Error()
-			return permissions.NewListPermissionsInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return internalServerError(err.Error())
 		}
 		defer tx.Commit()
 
@@ -28,8 +36,13 @@ func BuildListPermissionsHandler(db *sql.DB) func(permissions.ListPermissionsPar
 		result, err := permsdb.ListPermissions(tx)
 		if err != nil {
 			logcabin.Error.Print(err)
-			reason := err.Error()
-			return permissions.NewListPermissionsInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return internalServerError(err.Error())
+		}
+
+		// Add subject sources to the permission list.
+		if err = grouper.AddSourceIDToPermissions(result); err != nil {
+			logcabin.Error.Print(err)
+			return internalServerError(err.Error())
 		}
 
 		// Return the results.
