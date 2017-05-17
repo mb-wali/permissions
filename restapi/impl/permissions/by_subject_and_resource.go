@@ -13,15 +13,21 @@ import (
 )
 
 func bySubjectAndResourceOk(perms []*models.Permission) middleware.Responder {
-	return permissions.NewBySubjectAndResourceOK().WithPayload(&models.PermissionList{perms})
+	return permissions.NewBySubjectAndResourceOK().WithPayload(
+		&models.PermissionList{Permissions: perms},
+	)
 }
 
 func bySubjectAndResourceInternalServerError(reason string) middleware.Responder {
-	return permissions.NewBySubjectAndResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectAndResourceInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func bySubjectAndResourceBadRequest(reason string) middleware.Responder {
-	return permissions.NewBySubjectAndResourceBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectAndResourceBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildBySubjectAndResourceHandler(
@@ -113,6 +119,12 @@ func BuildBySubjectAndResourceHandler(
 		err = tx.Commit()
 		if err != nil {
 			tx.Rollback()
+			logcabin.Error.Print(err)
+			return bySubjectAndResourceInternalServerError(err.Error())
+		}
+
+		// Add the subject source ID to the results.
+		if err := grouperClient.AddSourceIDToPermissions(perms); err != nil {
 			logcabin.Error.Print(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
