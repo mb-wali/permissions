@@ -225,7 +225,7 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	)
 
 	api.PermissionsListResourcePermissionsHandler = permissions.ListResourcePermissionsHandlerFunc(
-		permissions_impl.BuildListResourcePermissionsHandler(db),
+		permissions_impl.BuildListResourcePermissionsHandler(db, grouperClient),
 	)
 
 	api.ServerShutdown = cleanup

@@ -115,7 +115,8 @@ func listPermissions(db *sql.DB) *models.PermissionList {
 func listResourcePermissionsAttempt(db *sql.DB, resourceType, resourceName string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildListResourcePermissionsHandler(db)
+	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	handler := impl.BuildListResourcePermissionsHandler(db, grouperClient)
 
 	// Attempt to list the permissions for the resource.
 	params := permissions.ListResourcePermissionsParams{
