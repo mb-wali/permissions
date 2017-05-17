@@ -43,6 +43,38 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/cyverse-de/configurate",
+			"repository": "https://github.com/cyverse-de/configurate",
+			"vcs": "git",
+			"revision": "7cb335597f9b972d380a6787a95b34f4a4705d5d",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/cyverse-de/dbutil",
+			"repository": "https://github.com/cyverse-de/dbutil",
+			"vcs": "git",
+			"revision": "04e85e2737c9ece12d4dd59bf4cd6197a86ea511",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/cyverse-de/logcabin",
+			"repository": "https://github.com/cyverse-de/logcabin",
+			"vcs": "git",
+			"revision": "5cd4eb61491ec0003072bcdbdc4f4733e3f37b28",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/cyverse-de/version",
+			"repository": "https://github.com/cyverse-de/version",
+			"vcs": "git",
+			"revision": "4ba7220a66d3d7aaf3211698928778c5d36f46f8",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/docker/go-units",
 			"repository": "https://github.com/docker/go-units",
 			"vcs": "git",
@@ -282,6 +314,14 @@
 			"repository": "https://github.com/spf13/pflag",
 			"vcs": "git",
 			"revision": "e57e3eeb33f795204c1ca35f56c44f83227c6e66",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/spf13/viper",
+			"repository": "https://github.com/spf13/viper",
+			"vcs": "git",
+			"revision": "0967fc9aceab2ce9da34061253ac10fb99bba5b2",
 			"branch": "master",
 			"notests": true
 		},

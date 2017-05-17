@@ -6,13 +6,12 @@ ENV PROGRAM=tool-registration
 
 COPY . /go/src/github.com/cyverse-de/permissions
 
-RUN go get github.com/constabulary/gb/...
-
-RUN cd /go/src/github.com/cyverse-de/permissions && \
-    gb build && \
-    cp bin/tool-registration /bin/
+RUN go install github.com/cyverse-de/permissions/...
 
 WORKDIR /
+
+ENTRYPOINT ["tool-registration"]
+CMD ["--help"]
 
 ARG git_commit=unknown
 ARG version="2.11.0"
