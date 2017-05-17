@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
@@ -11,14 +12,20 @@ import (
 )
 
 func putPermissionInternalServerError(reason string) middleware.Responder {
-	return permissions.NewPutPermissionInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewPutPermissionInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func putPermissionBadRequest(reason string) middleware.Responder {
-	return permissions.NewPutPermissionBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewPutPermissionBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
-func BuildPutPermissionHandler(db *sql.DB) func(permissions.PutPermissionParams) middleware.Responder {
+func BuildPutPermissionHandler(
+	db *sql.DB, grouperClient grouper.Grouper,
+) func(permissions.PutPermissionParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{
 		InternalServerError: putPermissionInternalServerError,
@@ -77,6 +84,11 @@ func BuildPutPermissionHandler(db *sql.DB) func(permissions.PutPermissionParams)
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
 			logcabin.Error.Print(err)
+			return putPermissionInternalServerError(err.Error())
+		}
+
+		// Add the subject source ID to the permission listing.
+		if err := grouperClient.AddSourceIDToPermission(permission); err != nil {
 			return putPermissionInternalServerError(err.Error())
 		}
 

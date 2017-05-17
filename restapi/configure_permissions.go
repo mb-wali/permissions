@@ -209,7 +209,7 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	)
 
 	api.PermissionsPutPermissionHandler = permissions.PutPermissionHandlerFunc(
-		permissions_impl.BuildPutPermissionHandler(db),
+		permissions_impl.BuildPutPermissionHandler(db, grouperClient),
 	)
 
 	api.PermissionsBySubjectHandler = permissions.BySubjectHandlerFunc(

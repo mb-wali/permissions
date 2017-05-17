@@ -78,7 +78,8 @@ func putPermissionAttempt(
 ) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildPutPermissionHandler(db)
+	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
+	handler := impl.BuildPutPermissionHandler(db, grouperClient)
 
 	// Attempt to put the permission.
 	params := permissions.PutPermissionParams{
