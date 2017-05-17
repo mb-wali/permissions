@@ -3,11 +3,11 @@ package permissions
 import (
 	"database/sql"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -39,7 +39,7 @@ func BuildPutPermissionHandler(
 		// Create a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())
 		}
 
@@ -76,14 +76,14 @@ func BuildPutPermissionHandler(
 		permission, err := permsdb.UpsertPermission(tx, subject.ID, *resource.ID, *permissionLevelId)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())
 		}
 

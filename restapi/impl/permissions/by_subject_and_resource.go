@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -46,7 +46,7 @@ func BuildBySubjectAndResourceHandler(
 		// Start a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 
@@ -54,7 +54,7 @@ func BuildBySubjectAndResourceHandler(
 		subject, err := permsdb.GetSubjectByExternalId(tx, models.ExternalSubjectID(subjectId))
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 		if subject != nil && string(subject.SubjectType) != subjectType {
@@ -67,7 +67,7 @@ func BuildBySubjectAndResourceHandler(
 		resourceType, err := permsdb.GetResourceTypeByName(tx, &resourceTypeName)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 		if resourceType == nil {
@@ -79,7 +79,7 @@ func BuildBySubjectAndResourceHandler(
 		resource, err := permsdb.GetResourceByName(tx, &resourceName, resourceType.ID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 		if resource == nil {
@@ -91,7 +91,7 @@ func BuildBySubjectAndResourceHandler(
 		subjectIds, err := buildSubjectIdList(grouperClient, subjectType, subjectId, lookup)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 
@@ -101,7 +101,7 @@ func BuildBySubjectAndResourceHandler(
 			perms, err = permsdb.PermissionsForSubjectsAndResource(tx, subjectIds, resourceTypeName, resourceName)
 			if err != nil {
 				tx.Rollback()
-				logcabin.Error.Print(err)
+				logger.Log.Error(err)
 				return bySubjectAndResourceInternalServerError(err.Error())
 			}
 		} else {
@@ -110,7 +110,7 @@ func BuildBySubjectAndResourceHandler(
 			)
 			if err != nil {
 				tx.Rollback()
-				logcabin.Error.Print(err)
+				logger.Log.Error(err)
 				return bySubjectAndResourceInternalServerError(err.Error())
 			}
 		}
@@ -119,13 +119,13 @@ func BuildBySubjectAndResourceHandler(
 		err = tx.Commit()
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 
 		// Add the subject source ID to the results.
 		if err := grouperClient.AddSourceIDToPermissions(perms); err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
 

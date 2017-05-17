@@ -3,11 +3,11 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -20,7 +20,7 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -31,7 +31,7 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 		exists, err := permsdb.SubjectExists(tx, id)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -48,7 +48,7 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 		// Delete the subject.
 		if err := permsdb.DeleteSubject(tx, id); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -58,7 +58,7 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

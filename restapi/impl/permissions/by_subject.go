@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -44,7 +44,7 @@ func BuildBySubjectHandler(
 		// Create a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 
@@ -52,7 +52,7 @@ func BuildBySubjectHandler(
 		subject, err := permsdb.GetSubjectByExternalId(tx, models.ExternalSubjectID(subjectId))
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 		if subject != nil && string(subject.SubjectType) != subjectType {
@@ -65,7 +65,7 @@ func BuildBySubjectHandler(
 		subjectIds, err := buildSubjectIdList(grouperClient, subjectType, subjectId, lookup)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 
@@ -75,14 +75,14 @@ func BuildBySubjectHandler(
 			perms, err = permsdb.PermissionsForSubjects(tx, subjectIds)
 			if err != nil {
 				tx.Rollback()
-				logcabin.Error.Print(err)
+				logger.Log.Error(err)
 				return bySubjectInternalServerError(err.Error())
 			}
 		} else {
 			perms, err = permsdb.PermissionsForSubjectsMinLevel(tx, subjectIds, *minLevel)
 			if err != nil {
 				tx.Rollback()
-				logcabin.Error.Print(err)
+				logger.Log.Error(err)
 				return bySubjectInternalServerError(err.Error())
 			}
 		}
@@ -90,13 +90,13 @@ func BuildBySubjectHandler(
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 
 		// Add the subject source ID to the response body.
 		if err := grouperClient.AddSourceIDToPermissions(perms); err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 

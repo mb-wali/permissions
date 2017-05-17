@@ -3,11 +3,11 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resources"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -20,7 +20,7 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -31,7 +31,7 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		exists, err := permsdb.ResourceExists(tx, &params.ID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -49,7 +49,7 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		duplicate, err := permsdb.GetDuplicateResourceByName(tx, &params.ID, resourceUpdate.Name)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -67,7 +67,7 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		resourceOut, err := permsdb.UpdateResource(tx, &params.ID, resourceUpdate.Name)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -77,7 +77,7 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

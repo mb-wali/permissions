@@ -10,7 +10,6 @@ import (
 
 	"github.com/cyverse-de/configurate"
 	"github.com/cyverse-de/dbutil"
-	"github.com/cyverse-de/logcabin"
 	"github.com/cyverse-de/version"
 
 	errors "github.com/go-openapi/errors"
@@ -21,6 +20,7 @@ import (
 	"github.com/tylerb/graceful"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/restapi/operations"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
@@ -118,17 +118,17 @@ func initService() error {
 
 // Clean up when the service exits.
 func cleanup() {
-	logcabin.Info.Printf("Closing the database connection.")
+	logger.Log.Info("Closing the database connection.")
 	db.Close()
 }
 
 func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	if err := validateOptions(); err != nil {
-		logcabin.Error.Fatal(err)
+		logger.Log.Fatal(err)
 	}
 
 	if err := initService(); err != nil {
-		logcabin.Error.Fatal(err)
+		logger.Log.Fatal(err)
 	}
 
 	api.ServeError = errors.ServeError

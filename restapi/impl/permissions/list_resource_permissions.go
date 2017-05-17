@@ -3,11 +3,11 @@ package permissions
 import (
 	"database/sql"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -35,7 +35,7 @@ func BuildListResourcePermissionsHandler(
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}
 
@@ -43,20 +43,20 @@ func BuildListResourcePermissionsHandler(
 		perms, err := permsdb.ListResourcePermissions(tx, resourceTypeName, resourceName)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}
 
 		// Add the subject source ID to the response body.
 		if err := grouperClient.AddSourceIDToPermissions(perms); err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}
 

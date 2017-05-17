@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -25,7 +25,7 @@ func getOrAddSubject(
 	// Attempt to look up the subject.
 	subject, err := permsdb.GetSubject(tx, subjectIn.SubjectID, subjectIn.SubjectType)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	if subject != nil {
@@ -35,7 +35,7 @@ func getOrAddSubject(
 	// Make sure that another subject with the same ID doesn't exist already.
 	exists, err := permsdb.SubjectIdExists(tx, subjectIn.SubjectID)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError((err.Error()))
 	}
 	if exists {
@@ -46,7 +46,7 @@ func getOrAddSubject(
 	// Attempt to add the subject.
 	subject, err = permsdb.AddSubject(tx, subjectIn.SubjectID, subjectIn.SubjectType)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	return subject, nil
@@ -61,7 +61,7 @@ func getOrAddResource(
 	// Look up the resource type.
 	resourceType, err := permsdb.GetResourceTypeByName(tx, resourceIn.ResourceType)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	if resourceType == nil {
@@ -72,7 +72,7 @@ func getOrAddResource(
 	// Attempt to look up the resource.
 	resource, err := permsdb.GetResourceByName(tx, resourceIn.Name, resourceType.ID)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	if resource != nil {
@@ -82,7 +82,7 @@ func getOrAddResource(
 	// Attempt to add the resource.
 	resource, err = permsdb.AddResource(tx, resourceIn.Name, resourceType.ID)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	return resource, nil
@@ -97,7 +97,7 @@ func getPermissionLevel(
 	// Look up the permission level.
 	permissionLevelId, err := permsdb.GetPermissionLevelIdByName(tx, level)
 	if err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
 	if permissionLevelId == nil {

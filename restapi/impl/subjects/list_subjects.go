@@ -2,11 +2,11 @@ package subjects
 
 import (
 	"database/sql"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -24,7 +24,7 @@ func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) midd
 		// Start a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())
 		}
 
@@ -32,14 +32,14 @@ func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) midd
 		result, err := permsdb.ListSubjects(tx, params.SubjectType, params.SubjectID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())
 		}
 
 		// Commit the transaction for the request.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())
 		}
 

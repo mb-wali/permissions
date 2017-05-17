@@ -3,11 +3,11 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -20,7 +20,7 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -31,7 +31,7 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		exists, err := permsdb.SubjectIdExists(tx, subjectIn.SubjectID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -49,7 +49,7 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		subjectOut, err := permsdb.AddSubject(tx, subjectIn.SubjectID, subjectIn.SubjectType)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -59,7 +59,7 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

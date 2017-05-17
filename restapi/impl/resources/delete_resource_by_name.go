@@ -3,11 +3,11 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resources"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -35,7 +35,7 @@ func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceB
 		// Start a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceByNameInternalServerError(err.Error())
 		}
 
@@ -43,7 +43,7 @@ func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceB
 		resource, err := permsdb.GetResourceByNameAndType(tx, params.ResourceName, params.ResourceTypeName)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceByNameInternalServerError(err.Error())
 		}
 		if resource == nil {
@@ -55,14 +55,14 @@ func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceB
 		// Delete the resource.
 		if err := permsdb.DeleteResource(tx, resource.ID); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceByNameInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceByNameInternalServerError(err.Error())
 		}
 

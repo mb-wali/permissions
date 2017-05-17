@@ -3,11 +3,11 @@ package permissions
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -31,14 +31,14 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		// Create a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 
 		// Look up the resource type.
 		resourceType, err := permsdb.GetResourceTypeByName(tx, &params.ResourceType)
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 		if resourceType == nil {
@@ -49,7 +49,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		// Look up the resource.
 		resource, err := permsdb.GetResourceByName(tx, &params.ResourceName, resourceType.ID)
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 		if resource == nil {
@@ -62,7 +62,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		subjectId := models.ExternalSubjectID(params.SubjectID)
 		subject, err := permsdb.GetSubject(tx, subjectId, subjectType)
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 		if subject == nil {
@@ -73,7 +73,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		// Look up the permission.
 		permission, err := permsdb.GetPermission(tx, subject.ID, *resource.ID)
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 		if permission == nil {
@@ -86,14 +86,14 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		// Delete the permission.
 		err = permsdb.DeletePermission(tx, permission.ID)
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 

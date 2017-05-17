@@ -7,10 +7,10 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/restapi"
 
 	"github.com/cyverse-de/configurate"
-	"github.com/cyverse-de/logcabin"
 	"github.com/cyverse-de/version"
 
 	_ "github.com/lib/pq"
@@ -104,7 +104,7 @@ func addSubject(db *sql.DB, subjectType, externalSubjectID string) (*string, err
 	// Extract the subject ID.
 	var subjectID *string
 	if err := row.Scan(&subjectID); err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, err
 	}
 	return subjectID, nil
@@ -153,7 +153,7 @@ func addResource(db *sql.DB, appID string) (*string, error) {
 	// Extract the resource ID.
 	var resourceID *string
 	if err := row.Scan(&resourceID); err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return nil, err
 	}
 	return resourceID, nil
@@ -238,7 +238,7 @@ func getDEUsersGroupID(grouperDb *sql.DB, folderNamePrefix string) (string, erro
 	// Extract the group ID.
 	var groupID *string
 	if err := row.Scan(&groupID); err != nil {
-		logcabin.Error.Print(err)
+		logger.Log.Error(err)
 		return "", err
 	}
 
@@ -262,35 +262,35 @@ func main() {
 
 	// Validate the command-line options.
 	if *config == "" {
-		logcabin.Error.Fatal("--config must be set")
+		logger.Log.Fatal("--config must be set")
 	}
 
 	// Load the configuration file.
 	cfg, err := configurate.InitDefaults(*config, restapi.DefaultConfig)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Establish the permissions database session.
 	dburi := cfg.GetString("db.uri")
 	db, err := sql.Open("postgres", dburi)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 	defer db.Close()
 	if err := db.Ping(); err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Establish the Grouper database session.
 	grouperDburi := cfg.GetString("grouperdb.uri")
 	grouperDb, err := sql.Open("postgres", grouperDburi)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 	defer grouperDb.Close()
 	if err := grouperDb.Ping(); err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Retrieve the Grouper folder name prefix.
@@ -299,27 +299,27 @@ func main() {
 	// Determine the DE Users group ID.
 	deUsersGroupID, err := getDEUsersGroupID(grouperDb, grouperFolderNamePrefix)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Determine the DE database URI.
 	*deDburi, err = determineDEDatabaseURI(*deDburi, dburi, *deDbname)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Establish the connection to the DE database.
 	deDb, err := sql.Open("postgres", *deDburi)
 	if err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 	defer deDb.Close()
 	if err := deDb.Ping(); err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 
 	// Run the conversion.
 	if err := runConversion(db, deDb, deUsersGroupID); err != nil {
-		logcabin.Error.Fatal(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 }

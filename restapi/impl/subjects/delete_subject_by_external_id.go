@@ -3,11 +3,11 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -39,7 +39,7 @@ func BuildDeleteSubjectByExternalIdHandler(
 		// Start a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteSubjectByExternalIdInternalServerError(err.Error())
 		}
 
@@ -47,7 +47,7 @@ func BuildDeleteSubjectByExternalIdHandler(
 		subject, err := permsdb.GetSubject(tx, subjectId, subjectType)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteSubjectByExternalIdInternalServerError(err.Error())
 		}
 		if subject == nil {
@@ -65,7 +65,7 @@ func BuildDeleteSubjectByExternalIdHandler(
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteSubjectByExternalIdInternalServerError(err.Error())
 		}
 

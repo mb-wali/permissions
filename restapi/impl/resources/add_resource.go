@@ -3,11 +3,11 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resources"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -20,7 +20,7 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -31,7 +31,7 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		resourceType, err := permsdb.GetResourceTypeByName(tx, resourceIn.ResourceType)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -48,7 +48,7 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		duplicate, err := permsdb.GetResourceByName(tx, resourceIn.Name, resourceType.ID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -68,7 +68,7 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		resourceOut, err := permsdb.AddResource(tx, resourceIn.Name, resourceType.ID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -78,7 +78,7 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

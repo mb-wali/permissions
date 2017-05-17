@@ -3,11 +3,11 @@ package resource_types
 import (
 	"database/sql"
 	"fmt"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -43,7 +43,7 @@ func BuildDeleteResourceTypeByNameHandler(
 		// Start a transaction for this request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 
@@ -51,7 +51,7 @@ func BuildDeleteResourceTypeByNameHandler(
 		resourceType, err := permsdb.GetResourceTypeByName(tx, &params.ResourceTypeName)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 		if resourceType == nil {
@@ -64,7 +64,7 @@ func BuildDeleteResourceTypeByNameHandler(
 		numResources, err := permsdb.CountResourcesOfType(tx, resourceType.ID)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 		if numResources != 0 {
@@ -76,14 +76,14 @@ func BuildDeleteResourceTypeByNameHandler(
 		// Delete the resource type.
 		if err := permsdb.DeleteResourceType(tx, resourceType.ID); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 

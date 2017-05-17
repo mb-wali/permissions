@@ -3,11 +3,11 @@ package permissions
 import (
 	"database/sql"
 	"github.com/cyverse-de/permissions/clients/grouper"
+	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 
-	"github.com/cyverse-de/logcabin"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -39,7 +39,7 @@ func BuildGrantPermissionHandler(
 		// Create a transaction for the request.
 		tx, err := db.Begin()
 		if err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return grantPermissionInternalServerError(err.Error())
 		}
 
@@ -68,20 +68,20 @@ func BuildGrantPermissionHandler(
 		permission, err := permsdb.UpsertPermission(tx, subject.ID, *resource.ID, *permissionLevelId)
 		if err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return grantPermissionInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return grantPermissionInternalServerError(err.Error())
 		}
 
 		// Add the subject source ID to the permission object.
 		if err := grouperClient.AddSourceIDToPermission(permission); err != nil {
-			logcabin.Error.Print(err)
+			logger.Log.Error(err)
 			return grantPermissionInternalServerError(err.Error())
 		}
 
