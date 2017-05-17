@@ -11,7 +11,9 @@ import (
 )
 
 func listSubjectsInternalServerError(reason string) middleware.Responder {
-	return subjects.NewListSubjectsInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return subjects.NewListSubjectsInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) middleware.Responder {
@@ -42,6 +44,6 @@ func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) midd
 		}
 
 		// Return the result.
-		return subjects.NewListSubjectsOK().WithPayload(&models.SubjectsOut{result})
+		return subjects.NewListSubjectsOK().WithPayload(&models.SubjectsOut{Subjects: result})
 	}
 }

@@ -19,7 +19,9 @@ func BuildResourceTypesIDPutHandler(db *sql.DB) func(resource_types.PutResourceT
 		tx, err := db.Begin()
 		if err != nil {
 			reason := err.Error()
-			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the resource type exists.
@@ -27,12 +29,16 @@ func BuildResourceTypesIDPutHandler(db *sql.DB) func(resource_types.PutResourceT
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("resource type %s not found", params.ID)
-			return resource_types.NewPutResourceTypesIDNotFound().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Check for a duplicate name.
@@ -40,12 +46,16 @@ func BuildResourceTypesIDPutHandler(db *sql.DB) func(resource_types.PutResourceT
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if duplicate != nil {
 			tx.Rollback()
 			reason := fmt.Sprintf("another resource type named %s already exists", *resourceTypeIn.Name)
-			return resource_types.NewPutResourceTypesIDBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Update the resource type.
@@ -53,14 +63,18 @@ func BuildResourceTypesIDPutHandler(db *sql.DB) func(resource_types.PutResourceT
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resource_types.NewPutResourceTypesIDOK().WithPayload(resourceTypeOut)

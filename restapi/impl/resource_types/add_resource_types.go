@@ -19,7 +19,9 @@ func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceT
 		tx, err := db.Begin()
 		if err != nil {
 			reason := err.Error()
-			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Check for a duplicate name.
@@ -27,12 +29,16 @@ func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceT
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if duplicate != nil {
 			tx.Rollback()
 			reason := fmt.Sprintf("a resource type named %s already exists", *resourceTypeIn.Name)
-			return resource_types.NewPostResourceTypesBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPostResourceTypesBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Save the resource type.
@@ -40,13 +46,17 @@ func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceT
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resource_types.NewPostResourceTypesCreated().WithPayload(resourceTypeOut)

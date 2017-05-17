@@ -23,7 +23,9 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewUpdateSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the subject exists.
@@ -32,11 +34,15 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewUpdateSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			reason := fmt.Sprintf("subject, %s, not found", string(id))
-			return subjects.NewUpdateSubjectNotFound().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that a subject with the same external subject ID doesn't exist.
@@ -45,11 +51,15 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewUpdateSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if duplicateExists {
 			reason := fmt.Sprintf("another subject with the ID, %s, already exists", string(subjectIn.SubjectID))
-			return subjects.NewUpdateSubjectBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Update the subject.
@@ -58,7 +68,9 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewUpdateSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -66,7 +78,9 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewUpdateSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return subjects.NewUpdateSubjectOK().WithPayload(subjectOut)

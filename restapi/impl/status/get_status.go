@@ -28,7 +28,11 @@ func serviceInfo(swaggerJson json.RawMessage) (*models.ServiceInfo, error) {
 
 	// Build the service info struct.
 	info := decoded.Info
-	return &models.ServiceInfo{&info.Description, &info.Title, &info.Version}, nil
+	return &models.ServiceInfo{
+		Description: &info.Description,
+		Service:     &info.Title,
+		Version:     &info.Version,
+	}, nil
 }
 
 func BuildStatusHandler(swaggerJson json.RawMessage) func(status.GetParams) middleware.Responder {

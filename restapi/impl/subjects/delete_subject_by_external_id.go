@@ -12,11 +12,15 @@ import (
 )
 
 func deleteSubjectByExternalIdInternalServerError(reason string) middleware.Responder {
-	return subjects.NewDeleteSubjectByExternalIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return subjects.NewDeleteSubjectByExternalIDInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func deleteSubjectByExternalIdNotFound(reason string) middleware.Responder {
-	return subjects.NewDeleteSubjectByExternalIDNotFound().WithPayload(&models.ErrorOut{&reason})
+	return subjects.NewDeleteSubjectByExternalIDNotFound().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func deleteSubjectByExternalIdOk() middleware.Responder {

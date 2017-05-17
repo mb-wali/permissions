@@ -56,7 +56,10 @@ var options struct {
 // Register the command-line options.
 func configureFlags(api *operations.PermissionsAPI) {
 	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
-		swag.CommandLineOptionsGroup{"Service Options", "", &options},
+		swag.CommandLineOptionsGroup{
+			ShortDescription: "Service Options",
+			LongDescription:  "",
+			Options:          &options},
 	}
 }
 

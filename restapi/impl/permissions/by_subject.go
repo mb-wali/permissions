@@ -13,15 +13,21 @@ import (
 )
 
 func bySubjectOk(perms []*models.Permission) middleware.Responder {
-	return permissions.NewBySubjectOK().WithPayload(&models.PermissionList{perms})
+	return permissions.NewBySubjectOK().WithPayload(
+		&models.PermissionList{Permissions: perms},
+	)
 }
 
 func bySubjectInternalServerError(reason string) middleware.Responder {
-	return permissions.NewBySubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func bySubjectBadRequest(reason string) middleware.Responder {
-	return permissions.NewBySubjectBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewBySubjectBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildBySubjectHandler(

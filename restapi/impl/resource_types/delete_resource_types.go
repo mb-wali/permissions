@@ -20,7 +20,9 @@ func BuildResourceTypesIDDeleteHandler(
 		tx, err := db.Begin()
 		if err != nil {
 			reason := err.Error()
-			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the resource type exists.
@@ -28,12 +30,16 @@ func BuildResourceTypesIDDeleteHandler(
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("resource type %s not found", params.ID)
-			return resource_types.NewDeleteResourceTypesIDNotFound().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the resource type has no resources associated with it.
@@ -41,12 +47,16 @@ func BuildResourceTypesIDDeleteHandler(
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if numResources != 0 {
 			tx.Rollback()
 			reason := fmt.Sprintf("resource type %s has resources associated with it", params.ID)
-			return resource_types.NewDeleteResourceTypesIDBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Delete the resource type.
@@ -54,14 +64,18 @@ func BuildResourceTypesIDDeleteHandler(
 		if err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
 			reason := err.Error()
-			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resource_types.NewDeleteResourceTypesIDOK()

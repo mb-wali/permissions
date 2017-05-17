@@ -26,7 +26,7 @@ func buildResourceTypesGetResponse(
 		return nil, err
 	}
 
-	return &models.ResourceTypesOut{resourceTypes}, nil
+	return &models.ResourceTypesOut{ResourceTypes: resourceTypes}, nil
 }
 
 func BuildResourceTypesGetHandler(db *sql.DB) func(resource_types.GetResourceTypesParams) middleware.Responder {
@@ -36,7 +36,9 @@ func BuildResourceTypesGetHandler(db *sql.DB) func(resource_types.GetResourceTyp
 		response, err := buildResourceTypesGetResponse(db, params)
 		if err != nil {
 			reason := err.Error()
-			return resource_types.NewGetResourceTypesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resource_types.NewGetResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		return resource_types.NewGetResourceTypesOK().WithPayload(response)
 	}

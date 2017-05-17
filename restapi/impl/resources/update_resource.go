@@ -22,7 +22,9 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewUpdateResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the resource exists.
@@ -31,12 +33,16 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewUpdateResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("resource, %s, not found", params.ID)
-			return resources.NewUpdateResourceNotFound().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that another resource with the same name doesn't already exist.
@@ -45,12 +51,16 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewUpdateResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if duplicate != nil {
 			tx.Rollback()
 			reason := fmt.Sprintf("a resource of the same type named, '%s', already exists", *resourceUpdate.Name)
-			return resources.NewUpdateResourceBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Update the resource.
@@ -59,7 +69,9 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewUpdateResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -67,7 +79,9 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewUpdateResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resources.NewUpdateResourceOK().WithPayload(resourceOut)

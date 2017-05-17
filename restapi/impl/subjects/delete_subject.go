@@ -22,7 +22,9 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewDeleteSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the subject exists.
@@ -31,12 +33,16 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewDeleteSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("subject, %s, not found", string(id))
-			return subjects.NewDeleteSubjectNotFound().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewDeleteSubjectNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Delete the subject.
@@ -44,7 +50,9 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewDeleteSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -52,7 +60,9 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewDeleteSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return subjects.NewDeleteSubjectOK()

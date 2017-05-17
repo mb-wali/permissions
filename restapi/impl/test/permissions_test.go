@@ -280,7 +280,7 @@ func TestAutoInsertSubject(t *testing.T) {
 		t.Errorf("unexpected internal permission ID returned: %s", permission.ID)
 	}
 	if len(permission.Subject.ID) != 36 {
-		t.Error("unexpected internal subject ID listed: %s", permission.Subject.ID)
+		t.Errorf("unexpected internal subject ID listed: %s", permission.Subject.ID)
 	}
 	if permission.Subject.SubjectID != subjectIn.SubjectID {
 		t.Errorf("unexpected external subject ID listed: %s", permission.Subject.SubjectID)

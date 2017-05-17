@@ -12,11 +12,15 @@ import (
 )
 
 func revokePermissionInternalServerError(reason string) middleware.Responder {
-	return permissions.NewRevokePermissionInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewRevokePermissionInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func revokePermissionNotFound(reason string) middleware.Responder {
-	return permissions.NewRevokePermissionNotFound().WithPayload(&models.ErrorOut{&reason})
+	return permissions.NewRevokePermissionNotFound().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionParams) middleware.Responder {

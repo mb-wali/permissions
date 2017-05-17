@@ -21,7 +21,9 @@ func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams)
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewDeleteResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewDeleteResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that the resource exists.
@@ -30,12 +32,16 @@ func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewDeleteResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewDeleteResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if !exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("resource, %s, not found", params.ID)
-			return resources.NewDeleteResourceNotFound().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewDeleteResourceNotFound().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Delete the resource.
@@ -44,7 +50,9 @@ func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewDeleteResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewDeleteResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -52,7 +60,9 @@ func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams)
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewDeleteResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewDeleteResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resources.NewDeleteResourceOK()

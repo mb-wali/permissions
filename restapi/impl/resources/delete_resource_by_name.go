@@ -12,7 +12,9 @@ import (
 )
 
 func deleteResourceByNameInternalServerError(reason string) middleware.Responder {
-	return resources.NewDeleteResourceByNameInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return resources.NewDeleteResourceByNameInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func deleteResourceByNameOK() middleware.Responder {
@@ -20,7 +22,9 @@ func deleteResourceByNameOK() middleware.Responder {
 }
 
 func deleteResourceByNameNotFound(reason string) middleware.Responder {
-	return resources.NewDeleteResourceByNameNotFound().WithPayload(&models.ErrorOut{&reason})
+	return resources.NewDeleteResourceByNameNotFound().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceByNameParams) middleware.Responder {

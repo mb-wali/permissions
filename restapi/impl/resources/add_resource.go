@@ -22,7 +22,9 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewAddResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Load the resource type.
@@ -31,11 +33,15 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewAddResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if resourceType == nil {
 			reason := fmt.Sprintf("no resource type named, '%s', found", *resourceIn.ResourceType)
-			return resources.NewAddResourceBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Verify that another resource with the same name doesn't already exist.
@@ -44,14 +50,18 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewAddResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if duplicate != nil {
 			tx.Rollback()
 			reason := fmt.Sprintf(
 				"a resource named, '%s', with type, '%s', already exists", *resourceIn.Name, *resourceType.Name,
 			)
-			return resources.NewAddResourceBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Add the resource to the database.
@@ -60,7 +70,9 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewAddResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -68,7 +80,9 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewAddResourceInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return resources.NewAddResourceCreated().WithPayload(resourceOut)

@@ -22,7 +22,9 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewAddSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewAddSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Make sure that a subject with the same ID doesn't exist already.
@@ -31,12 +33,16 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewAddSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewAddSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		if exists {
 			tx.Rollback()
 			reason := fmt.Sprintf("subject, %s, already exists", string(subjectIn.SubjectID))
-			return subjects.NewAddSubjectBadRequest().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewAddSubjectBadRequest().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Add the subject.
@@ -45,7 +51,9 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewAddSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewAddSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Commit the transaction.
@@ -53,7 +61,9 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 			tx.Rollback()
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return subjects.NewAddSubjectInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return subjects.NewAddSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		return subjects.NewAddSubjectCreated().WithPayload(subjectOut)

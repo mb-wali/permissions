@@ -16,15 +16,21 @@ func deleteResourceTypeByNameOK() middleware.Responder {
 }
 
 func deleteResourceTypeByNameBadRequest(reason string) middleware.Responder {
-	return resource_types.NewDeleteResourceTypeByNameBadRequest().WithPayload(&models.ErrorOut{&reason})
+	return resource_types.NewDeleteResourceTypeByNameBadRequest().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func deleteResourceTypeByNameInternalServerError(reason string) middleware.Responder {
-	return resource_types.NewDeleteResourceTypeByNameInternalServerError().WithPayload(&models.ErrorOut{&reason})
+	return resource_types.NewDeleteResourceTypeByNameInternalServerError().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func deleteResourceTypeByNameNotFound(reason string) middleware.Responder {
-	return resource_types.NewDeleteResourceTypeByNameNotFound().WithPayload(&models.ErrorOut{&reason})
+	return resource_types.NewDeleteResourceTypeByNameNotFound().WithPayload(
+		&models.ErrorOut{Reason: &reason},
+	)
 }
 
 func BuildDeleteResourceTypeByNameHandler(

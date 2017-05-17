@@ -100,7 +100,7 @@ func TestAddResourceType(t *testing.T) {
 
 	// Verify the name and description.
 	if *resourceTypeOut.Name != name {
-		t.Errorf("unexpected resource type name returned from database: %s", resourceTypeOut.Name)
+		t.Errorf("unexpected resource type name returned from database: %s", *resourceTypeOut.Name)
 	}
 	if resourceTypeOut.Description != description {
 		t.Errorf("unexpected resource type description returned from database: %s", resourceTypeOut.Description)

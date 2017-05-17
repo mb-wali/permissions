@@ -20,7 +20,9 @@ func BuildListResourcesHandler(db *sql.DB) func(resources.ListResourcesParams) m
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewListResourcesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewListResourcesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 		defer tx.Commit()
 
@@ -29,7 +31,9 @@ func BuildListResourcesHandler(db *sql.DB) func(resources.ListResourcesParams) m
 		if err != nil {
 			logcabin.Error.Print(err)
 			reason := err.Error()
-			return resources.NewListResourcesInternalServerError().WithPayload(&models.ErrorOut{&reason})
+			return resources.NewListResourcesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
 		}
 
 		// Return the results.
