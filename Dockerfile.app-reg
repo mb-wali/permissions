@@ -6,11 +6,7 @@ ENV PROGRAM=app-registration
 
 COPY . /go/src/github.com/cyverse-de/permissions
 
-RUN go get github.com/constabulary/gb/...
-
-RUN cd /go/src/github.com/cyverse-de/permissions && \
-    gb build && \
-    cp bin/app-registration /bin/
+RUN go install github.com/cyverse-de/permissions/...
 
 WORKDIR /
 

@@ -4,7 +4,7 @@ ENV CONF_TEMPLATE=/go/src/github.com/cyverse-de/permissions/permissions.yaml.tmp
 ENV CONF_FILENAME=permissions.yaml
 ENV PROGRAM=permissions
 
-COPY . /go/src/github.com/cyverse-de/permissions
+COPY . /go/src/github.com/cyverse-de/permissions/
 
 RUN git clone https://github.com/swagger-api/swagger-ui.git /tmp/swagger-ui \
     && cd /tmp/swagger-ui \
@@ -15,11 +15,8 @@ RUN git clone https://github.com/swagger-api/swagger-ui.git /tmp/swagger-ui \
     && rm -rf /tmp/swagger-ui \
     && cp /go/src/github.com/cyverse-de/permissions/index.html /docs/index.html
 
-RUN go get github.com/constabulary/gb/...
-
-RUN cd /go/src/github.com/cyverse-de/permissions && \
-    gb build && \
-    cp bin/permissions-server /bin/permissions
+RUN go install github.com/cyverse-de/permissions/... \
+    && cp /go/bin/permissions-server /bin/permissions
 
 WORKDIR /
 EXPOSE 60000
