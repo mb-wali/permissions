@@ -29,7 +29,7 @@ node('docker') {
             stage("Test") {
                 sh """docker run --rm --name ${dockerTestRunner} \\
                                  --entrypoint 'go' \\
-                                 ${dockerRepo} test /go/src/github.com/cyverse-de/${service.repo}/..."""
+                                 ${dockerRepo} test github.com/cyverse-de/${service.repo}/..."""
             }
 
             milestone 100
