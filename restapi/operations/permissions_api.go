@@ -65,6 +65,9 @@ func NewPermissionsAPI(spec *loads.Document) *PermissionsAPI {
 		PermissionsBySubjectAndResourceTypeHandler: permissions.BySubjectAndResourceTypeHandlerFunc(func(params permissions.BySubjectAndResourceTypeParams) middleware.Responder {
 			return middleware.NotImplemented("operation PermissionsBySubjectAndResourceType has not yet been implemented")
 		}),
+		PermissionsCopyPermissionsHandler: permissions.CopyPermissionsHandlerFunc(func(params permissions.CopyPermissionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation PermissionsCopyPermissions has not yet been implemented")
+		}),
 		ResourcesDeleteResourceHandler: resources.DeleteResourceHandlerFunc(func(params resources.DeleteResourceParams) middleware.Responder {
 			return middleware.NotImplemented("operation ResourcesDeleteResource has not yet been implemented")
 		}),
@@ -145,6 +148,8 @@ type PermissionsAPI struct {
 	PermissionsBySubjectAndResourceHandler permissions.BySubjectAndResourceHandler
 	// PermissionsBySubjectAndResourceTypeHandler sets the operation handler for the by subject and resource type operation
 	PermissionsBySubjectAndResourceTypeHandler permissions.BySubjectAndResourceTypeHandler
+	// PermissionsCopyPermissionsHandler sets the operation handler for the copy permissions operation
+	PermissionsCopyPermissionsHandler permissions.CopyPermissionsHandler
 	// ResourcesDeleteResourceHandler sets the operation handler for the delete resource operation
 	ResourcesDeleteResourceHandler resources.DeleteResourceHandler
 	// ResourcesDeleteResourceByNameHandler sets the operation handler for the delete resource by name operation
@@ -274,6 +279,10 @@ func (o *PermissionsAPI) Validate() error {
 
 	if o.PermissionsBySubjectAndResourceTypeHandler == nil {
 		unregistered = append(unregistered, "permissions.BySubjectAndResourceTypeHandler")
+	}
+
+	if o.PermissionsCopyPermissionsHandler == nil {
+		unregistered = append(unregistered, "permissions.CopyPermissionsHandler")
 	}
 
 	if o.ResourcesDeleteResourceHandler == nil {
@@ -464,6 +473,11 @@ func (o *PermissionsAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/permissions/subjects/{subject_type}/{subject_id}/{resource_type}"] = permissions.NewBySubjectAndResourceType(o.context, o.PermissionsBySubjectAndResourceTypeHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/permissions/subjects/{subject_type}/{subject_id}/copy"] = permissions.NewCopyPermissions(o.context, o.PermissionsCopyPermissionsHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)

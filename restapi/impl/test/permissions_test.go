@@ -126,6 +126,55 @@ func listResourcePermissionsAttempt(db *sql.DB, resourceType, resourceName strin
 	return handler(params)
 }
 
+func listResourcePermissions(db *sql.DB, resourceType, resourceName string) *models.PermissionList {
+	responder := listResourcePermissionsAttempt(db, resourceType, resourceName)
+	return responder.(*permissions.ListResourcePermissionsOK).Payload
+}
+
+func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectId string) middleware.Responder {
+
+	// Build the request handler.
+	handler := impl.BuildBySubjectHandler(db, grouper.Grouper(mockGrouperClient))
+
+	// Attempt to look up the permissions.
+	lookup := false
+	params := permissions.BySubjectParams{
+		SubjectType: subjectType,
+		SubjectID:   subjectId,
+		Lookup:      &lookup,
+		MinLevel:    nil,
+	}
+	return handler(params)
+}
+
+func listSubjectPermissions(db *sql.DB, subjectType, subjectId string) *models.PermissionList {
+	responder := listSubjectPermissionsAttempt(db, subjectType, subjectId)
+	return responder.(*permissions.BySubjectOK).Payload
+}
+
+func copyPermissionsAttempt(db *sql.DB, sourceType, sourceId, destType, destId string) middleware.Responder {
+
+	// Build the request handler.
+	handler := impl.BuildCopyPermissionsHandler(db)
+
+	// Attempt to copy the permissions.
+	dest := models.SubjectIn{
+		SubjectType: models.SubjectType(destType),
+		SubjectID:   models.ExternalSubjectID(destId),
+	}
+	params := permissions.CopyPermissionsParams{
+		SubjectType:  sourceType,
+		SubjectID:    sourceId,
+		DestSubjects: &models.SubjectsIn{Subjects: []*models.SubjectIn{&dest}},
+	}
+	return handler(params)
+}
+
+func copyPermissions(db *sql.DB, sourceType, sourceId, destType, destId string) middleware.Responder {
+	responder := copyPermissionsAttempt(db, sourceType, sourceId, destType, destId)
+	return responder.(*permissions.CopyPermissionsOK)
+}
+
 func addDefaultPermissions(db *sql.DB) {
 	putPermission(db, "user", "s2", "app", "app1", "own")
 	putPermission(db, "group", "g1id", "app", "app1", "read")
@@ -141,11 +190,6 @@ func addDefaultPermissions(db *sql.DB) {
 	putPermission(db, "user", "s2", "analysis", "analysis2", "read")
 	putPermission(db, "group", "g1id", "analysis", "analysis2", "write")
 	putPermission(db, "group", "g2id", "analysis", "analysis3", "own")
-}
-
-func listResourcePermissions(db *sql.DB, resourceType, resourceName string) *models.PermissionList {
-	responder := listResourcePermissionsAttempt(db, resourceType, resourceName)
-	return responder.(*permissions.ListResourcePermissionsOK).Payload
 }
 
 func TestGrantPermission(t *testing.T) {
@@ -748,4 +792,94 @@ func TestListResourcePermissions(t *testing.T) {
 	checkPerm(t, perms, 1, "app1", "g2id", "write")
 	checkPerm(t, perms, 2, "app1", "s2", "own")
 	checkPerm(t, perms, 3, "app1", "s3", "read")
+}
+
+func TestCopyPermissions(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+
+	// Initialize the database.
+	db := initdb(t)
+	addDefaultResourceTypes(db, t)
+
+	// Add some permissions.
+	addDefaultPermissions(db)
+
+	// Copy permissions from subject s2 to subject s1.
+	copyPermissions(db, "user", "s2", "user", "s1")
+
+	// Verify that the permissions were copied.
+	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	if len(perms) != 4 {
+		t.Fatalf("unexpected number of results: %d", len(perms))
+	}
+
+	// Verify that we got the expected results.
+	checkPerm(t, perms, 0, "app1", "s1", "own")
+	checkPerm(t, perms, 1, "app2", "s1", "read")
+	checkPerm(t, perms, 2, "analysis1", "s1", "own")
+	checkPerm(t, perms, 3, "analysis2", "s1", "read")
+}
+
+func TestCopyPermissionsOverwrite(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+
+	// Initialize the database.
+	db := initdb(t)
+	addDefaultResourceTypes(db, t)
+
+	// Add some permissions.
+	addDefaultPermissions(db)
+
+	// Add a permission that should be overwritten.
+	putPermission(db, "user", "s1", "app", "app1", "read")
+
+	// Copy permissions from subject s2 to subject s1.
+	copyPermissions(db, "user", "s2", "user", "s1")
+
+	// Verify that the permissions were copied.
+	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	if len(perms) != 4 {
+		t.Fatalf("unexpected number of results: %d", len(perms))
+	}
+
+	// Verify that we got the expected results.
+	checkPerm(t, perms, 0, "app1", "s1", "own")
+	checkPerm(t, perms, 1, "app2", "s1", "read")
+	checkPerm(t, perms, 2, "analysis1", "s1", "own")
+	checkPerm(t, perms, 3, "analysis2", "s1", "read")
+}
+
+func TestCopyPermissionsRetain(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+
+	// Initialize the database.
+	db := initdb(t)
+	addDefaultResourceTypes(db, t)
+
+	// Add some permissions.
+	addDefaultPermissions(db)
+
+	// Add a permission that should not be overwritten
+	putPermission(db, "user", "s1", "app", "app2", "own")
+
+	// Copy permissions from subject s2 to subject s1.
+	copyPermissions(db, "user", "s2", "user", "s1")
+
+	// Verify that the permissions were copied.
+	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	if len(perms) != 4 {
+		t.Fatalf("unexpected number of results: %d", len(perms))
+	}
+
+	// Verify that we got the expected results.
+	checkPerm(t, perms, 0, "app1", "s1", "own")
+	checkPerm(t, perms, 1, "app2", "s1", "own")
+	checkPerm(t, perms, 2, "analysis1", "s1", "own")
+	checkPerm(t, perms, 3, "analysis2", "s1", "read")
 }
