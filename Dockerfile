@@ -6,15 +6,6 @@ ENV PROGRAM=permissions
 
 COPY . /go/src/github.com/cyverse-de/permissions/
 
-RUN git clone https://github.com/swagger-api/swagger-ui.git /tmp/swagger-ui \
-    && cd /tmp/swagger-ui \
-    && git checkout v2.1.4 \
-    && mkdir -p /docs \
-    && cp -pr dist/* /docs/ \
-    && cd / \
-    && rm -rf /tmp/swagger-ui \
-    && cp /go/src/github.com/cyverse-de/permissions/index.html /docs/index.html
-
 RUN go install github.com/cyverse-de/permissions/... \
     && cp /go/bin/permissions-server /bin/permissions
 
@@ -31,3 +22,4 @@ LABEL org.cyverse.descriptive-version="$descriptive_version"
 LABEL org.label-schema.vcs-ref="$git_commit"
 LABEL org.label-schema.vcs-url="https://github.com/cyverse-de/permissions"
 LABEL org.label-schema.version="$descriptive_version"
+f

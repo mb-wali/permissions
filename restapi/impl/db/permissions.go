@@ -448,3 +448,19 @@ func DeletePermission(tx *sql.Tx, id models.PermissionID) error {
 
 	return nil
 }
+
+func CopyPermissions(tx *sql.Tx, source, dest *models.SubjectOut) error {
+
+	// Copy or update permissions.
+	stmt := `INSERT INTO permissions AS d (subject_id, resource_id, permission_level_id)
+           SELECT $2, resource_id, permission_level_id
+           FROM permissions WHERE subject_id = $1
+           ON CONFLICT (subject_id, resource_id) DO UPDATE SET permission_level_id = (
+               SELECT id FROM permission_levels
+               WHERE id IN (d.permission_level_id, EXCLUDED.permission_level_id)
+               ORDER BY precedence LIMIT 1
+           )`
+	_, err := tx.Exec(stmt, string(source.ID), string(dest.ID))
+
+	return err
+}

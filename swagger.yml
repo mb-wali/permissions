@@ -162,6 +162,17 @@ definitions:
         $ref: "#/definitions/external_subject_id"
       subject_type:
         $ref: "#/definitions/subject_type"
+  subjects_in:
+    type: object
+    description: "An incoming list of subjects."
+    required:
+      - subjects
+    properties:
+      subjects:
+        type: array
+        description: "The list of subjects."
+        items:
+          $ref: "#/definitions/subject_in"
   subject_out:
     type: object
     description: "An outgoing subject."
@@ -820,6 +831,44 @@ paths:
           description: "OK"
           schema:
             $ref: "#/definitions/permission_list"
+        400:
+          $ref: "#/responses/bad_request"
+        500:
+          $ref: "#/responses/internal_server_error"
+  /permissions/subjects/{subject_type}/{subject_id}/copy:
+    parameters:
+      - name: subject_type
+        type: string
+        enum:
+          - user
+          - group
+        description: "The subject type name."
+        in: path
+        required: True
+      - name: subject_id
+        type: string
+        description: "The external subject identifier."
+        in: path
+        required: True
+    post:
+      tags:
+        - permissions
+      summary: "Copy Permissions Between Subjects"
+      description: >-
+        Copies all permissions that have been granted to one subject to one or more other subjects. Only permissions
+        that are assigned directly to the source subject are copied. Permissions that are granted to groups that the
+        source subject belongs to are not copied.
+      parameters:
+        - description: "The destination subjects."
+          in: body
+          name: "destSubjects"
+          required: True
+          schema:
+            $ref: "#/definitions/subjects_in"
+      operationId: copyPermissions
+      responses:
+        200:
+          description: "OK"
         400:
           $ref: "#/responses/bad_request"
         500:

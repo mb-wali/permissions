@@ -287,6 +287,58 @@ func init() {
         }
       ]
     },
+    "/permissions/subjects/{subject_type}/{subject_id}/copy": {
+      "post": {
+        "description": "Copies all permissions that have been granted to one subject to one or more other subjects. Only permissions that are assigned directly to the source subject are copied. Permissions that are granted to groups that the source subject belongs to are not copied.",
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Copy Permissions Between Subjects",
+        "operationId": "copyPermissions",
+        "parameters": [
+          {
+            "description": "The destination subjects.",
+            "name": "destSubjects",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/subjects_in"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/responses/bad_request"
+          },
+          "500": {
+            "$ref": "#/responses/internal_server_error"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "enum": [
+            "user",
+            "group"
+          ],
+          "type": "string",
+          "description": "The subject type name.",
+          "name": "subject_type",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "The external subject identifier.",
+          "name": "subject_id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/permissions/subjects/{subject_type}/{subject_id}/{resource_type}": {
       "get": {
         "description": "Looks up all permissions granted to a subject for resources of the given type. If lookup mode is enabled and the subject is a user, the most lenient permissions granted to the subject or any groups the subject belongs to will be listed. If lookup mode is not enabled or the subject is a group then only permissions assigned directly to the subject will be listed. This endpoint will return an error status if the subject ID is in use and associated with a different subject type.",
@@ -1268,6 +1320,22 @@ func init() {
         "user",
         "group"
       ]
+    },
+    "subjects_in": {
+      "description": "An incoming list of subjects.",
+      "type": "object",
+      "required": [
+        "subjects"
+      ],
+      "properties": {
+        "subjects": {
+          "description": "The list of subjects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/subject_in"
+          }
+        }
+      }
     },
     "subjects_out": {
       "description": "A list of subjects.",
