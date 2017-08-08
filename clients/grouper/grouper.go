@@ -48,7 +48,7 @@ func (gc *GrouperClient) GroupsForSubject(subjectId string) ([]*GroupInfo, error
 
 	// Query the database.
 	query := `SELECT group_id, group_name FROM grouper_memberships_v
-            WHERE subject_id = $1 AND group_name LIKE $2`
+            WHERE subject_id = $1 AND group_name LIKE $2 AND list_name = 'members'`
 	rows, err := gc.db.Query(query, subjectId, gc.prefix+"%")
 	if err != nil {
 		return nil, err
