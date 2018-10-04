@@ -34,7 +34,7 @@ node('docker') {
                 try {
                     sh """docker run --rm --name ${dockerTestRunner} \\
                                      --entrypoint 'sh' \\
-                                     ${dockerRepo} -c 'cd /go/src/github.com/cyverse-de/${service.repo} && go test -v ./... | tee /dev/stderr | go-junit-report' > test-results.xml""" >
+                                     ${dockerRepo} -c 'cd /go/src/github.com/cyverse-de/${service.repo} && go test -v ./... | tee /dev/stderr | go-junit-report' > test-results.xml"""
                 } finally {
                     junit 'test-results.xml'
 
