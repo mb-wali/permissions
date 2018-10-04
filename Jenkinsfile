@@ -38,7 +38,7 @@ node('docker') {
                 } finally {
                     junit 'test-results.xml'
 
-                    sh "docker run --rm --name ${dockerTestCleanup} -v $(pwd):/build -w /build alpine rm -r test-results.xml"
+                    sh "docker run --rm --name ${dockerTestCleanup} -v \$(pwd):/build -w /build alpine rm -r test-results.xml"
                 }
             }
 
