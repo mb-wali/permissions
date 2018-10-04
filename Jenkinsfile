@@ -1,4 +1,5 @@
 #!groovy
+milestone 0
 node('docker') {
     slackJobDescription = "job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
     try {
@@ -15,7 +16,9 @@ node('docker') {
             descriptive_version = sh(returnStdout: true, script: 'git describe --long --tags --dirty --always').trim()
             echo descriptive_version
 
-            sh "docker build --pull --no-cache --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepo} ."
+            milestone 50
+            sh "docker build --pull --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepo} ."
+            milestone 51
             image_sha = sh(returnStdout: true, script: "docker inspect -f '{{ .Config.Image }}' ${dockerRepo}").trim()
             echo image_sha
 
@@ -24,12 +27,19 @@ node('docker') {
         }
 
         dockerTestRunner = "test-${env.BUILD_TAG}"
+        dockerTestCleanup = "test-cleanup-${env.BUILD_TAG}"
         dockerPusher = "push-${env.BUILD_TAG}"
         try {
             stage("Test") {
-                sh """docker run --rm --name ${dockerTestRunner} \\
-                                 --entrypoint 'go' \\
-                                 ${dockerRepo} test github.com/cyverse-de/${service.repo}/..."""
+                try {
+                    sh """docker run --rm --name ${dockerTestRunner} \\
+                                     --entrypoint 'sh' \\
+                                     ${dockerRepo} -c 'cd /go/src/github.com/cyverse-de/${service.repo} && go test -v ./... | tee /dev/stderr | go-junit-report' > test-results.xml""" >
+                } finally {
+                    junit 'test-results.xml'
+
+                    sh "docker run --rm --name ${dockerTestCleanup} -v $(pwd):/build -w /build alpine rm -r test-results.xml"
+                }
             }
 
             milestone 100
@@ -49,7 +59,6 @@ node('docker') {
                                          sh -e -c \\
                                   'docker login -u \"\$DOCKER_USERNAME\" -p \"\$DOCKER_PASSWORD\" && \\
                                    docker push ${dockerPushRepo} && \\
-                                   docker rmi ${dockerPushRepo} && \\
                                    docker logout'"""
                     }
                 }
@@ -57,6 +66,9 @@ node('docker') {
         } finally {
             sh returnStatus: true, script: "docker kill ${dockerTestRunner}"
             sh returnStatus: true, script: "docker rm ${dockerTestRunner}"
+
+            sh returnStatus: true, script: "docker kill ${dockerTestCleanup}"
+            sh returnStatus: true, script: "docker rm ${dockerTestCleanup}"
 
             sh returnStatus: true, script: "docker kill ${dockerPusher}"
             sh returnStatus: true, script: "docker rm ${dockerPusher}"
