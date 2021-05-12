@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -27,6 +28,7 @@ func deleteResourceByNameNotFound(reason string) middleware.Responder {
 	)
 }
 
+// BuildDeleteResourceByNameHandler builds the request handler for the delete resource by name endpoint.
 func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceByNameParams) middleware.Responder {
 
 	// Return the handler function.

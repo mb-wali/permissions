@@ -15,9 +15,7 @@ import (
 	httpkit "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
 	swag "github.com/go-openapi/swag"
-	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
-	"github.com/tylerb/graceful"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
@@ -29,15 +27,19 @@ import (
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
 	permissions_impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
-	resource_types_impl "github.com/cyverse-de/permissions/restapi/impl/resource_types"
 	resources_impl "github.com/cyverse-de/permissions/restapi/impl/resources"
+	resource_types_impl "github.com/cyverse-de/permissions/restapi/impl/resourcetypes"
 	status_impl "github.com/cyverse-de/permissions/restapi/impl/status"
 	subjects_impl "github.com/cyverse-de/permissions/restapi/impl/subjects"
+
+	// The blank import for the database driver appears in this package because it's the highest level package for
+	// this service that isn't automatically generated.
+	_ "github.com/lib/pq"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-// The default permissions configuration.
+// DefaultConfig contains the default permissions configuration.
 const DefaultConfig = `
 db:
   uri: "postgresql://de:notprod@dedb:5432/permissions?sslmode=disable"
@@ -56,10 +58,11 @@ var options struct {
 // Register the command-line options.
 func configureFlags(api *operations.PermissionsAPI) {
 	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
-		swag.CommandLineOptionsGroup{
+		{
 			ShortDescription: "Service Options",
 			LongDescription:  "",
-			Options:          &options},
+			Options:          &options,
+		},
 	}
 }
 
@@ -74,7 +77,7 @@ func validateOptions() error {
 
 // The database connection.
 var db *sql.DB
-var grouperClient *grouper.GrouperClient
+var grouperClient *grouper.Client
 
 // Initialize the service.
 func initService() error {
@@ -184,7 +187,7 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	)
 
 	api.SubjectsDeleteSubjectByExternalIDHandler = subjects.DeleteSubjectByExternalIDHandlerFunc(
-		subjects_impl.BuildDeleteSubjectByExternalIdHandler(db),
+		subjects_impl.BuildDeleteSubjectByExternalIDHandler(db),
 	)
 
 	api.SubjectsListSubjectsHandler = subjects.ListSubjectsHandlerFunc(
@@ -249,7 +252,7 @@ func configureTLS(tlsConfig *tls.Config) {
 // If you need to modify a config, store server instance to stop it individually later, this is the place.
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix"
-func configureServer(s *graceful.Server, scheme, addr string) {
+func configureServer(s *http.Server, scheme, addr string) {
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.

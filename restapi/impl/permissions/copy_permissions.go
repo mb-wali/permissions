@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -25,6 +26,7 @@ func copyPermissionsInternalServerError(reason string) middleware.Responder {
 	)
 }
 
+// BuildCopyPermissionsHandler builds the request handler for the copy permissions endpoint.
 func BuildCopyPermissionsHandler(db *sql.DB) func(permissions.CopyPermissionsParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{
@@ -46,7 +48,7 @@ func BuildCopyPermissionsHandler(db *sql.DB) func(permissions.CopyPermissionsPar
 		}
 
 		// Either get or add the source subject.
-		source, errorResponse := getOrAddSubject(tx, &models.SubjectIn{SubjectType: sourceType, SubjectID: sourceID}, erf)
+		source, errorResponse := getOrAddSubject(tx, &models.SubjectIn{SubjectType: &sourceType, SubjectID: &sourceID}, erf)
 		if errorResponse != nil {
 			tx.Rollback()
 			return errorResponse

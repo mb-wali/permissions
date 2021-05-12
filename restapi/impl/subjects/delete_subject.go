@@ -3,6 +3,7 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildDeleteSubjectHandler builds the request handler for the delete subject endpoint.
 func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) middleware.Responder {
 
 	// Return the handler function.

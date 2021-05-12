@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -23,6 +24,7 @@ func listResourcePermissionsInternalServerError(reason string) middleware.Respon
 	)
 }
 
+// BuildListResourcePermissionsHandler builds the request handler for the list resource permissions endpoint.
 func BuildListResourcePermissionsHandler(
 	db *sql.DB, grouperClient grouper.Grouper,
 ) func(permissions.ListResourcePermissionsParams) middleware.Responder {

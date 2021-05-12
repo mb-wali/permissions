@@ -2,8 +2,9 @@ package test
 
 import (
 	"database/sql"
-	"github.com/cyverse-de/permissions/models"
 	"testing"
+
+	"github.com/cyverse-de/permissions/models"
 
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 )
@@ -67,10 +68,12 @@ func addTestResource(db *sql.DB, name, resourceType string, t *testing.T) {
 	}
 }
 
-func newSubjectIn(subjectId, subjectType string) *models.SubjectIn {
+func newSubjectIn(subjectIDString, subjectTypeString string) *models.SubjectIn {
+	subjectID := models.ExternalSubjectID(subjectIDString)
+	subjectType := models.SubjectType(subjectTypeString)
 	return &models.SubjectIn{
-		SubjectID:   models.ExternalSubjectID(subjectId),
-		SubjectType: models.SubjectType(subjectType),
+		SubjectID:   &subjectID,
+		SubjectType: &subjectType,
 	}
 }
 

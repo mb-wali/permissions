@@ -2,18 +2,19 @@ package test
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 	middleware "github.com/go-openapi/runtime/middleware"
-	"testing"
 )
 
 var groups = []*grouper.GroupInfo{
-	&grouper.GroupInfo{ID: "g1id", Name: "g1"},
-	&grouper.GroupInfo{ID: "g2id", Name: "g2"},
-	&grouper.GroupInfo{ID: "g3id", Name: "g3"},
+	{ID: "g1id", Name: "g1"},
+	{ID: "g2id", Name: "g2"},
+	{ID: "g3id", Name: "g3"},
 }
 
 var groupMemberships = map[string][]*grouper.GroupInfo{
@@ -24,7 +25,7 @@ var groupMemberships = map[string][]*grouper.GroupInfo{
 
 var mockGrouperClient = grouper.NewMockGrouperClient(groupMemberships)
 
-func bySubjectAttempt(db *sql.DB, subjectType, subjectId string, lookup bool, minLevel *string) middleware.Responder {
+func bySubjectAttempt(db *sql.DB, subjectType, subjectID string, lookup bool, minLevel *string) middleware.Responder {
 
 	// Build the request handler.
 	handler := impl.BuildBySubjectHandler(db, grouper.Grouper(mockGrouperClient))
@@ -32,20 +33,20 @@ func bySubjectAttempt(db *sql.DB, subjectType, subjectId string, lookup bool, mi
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectParams{
 		SubjectType: subjectType,
-		SubjectID:   subjectId,
+		SubjectID:   subjectID,
 		Lookup:      &lookup,
 		MinLevel:    minLevel,
 	}
 	return handler(params)
 }
 
-func bySubject(db *sql.DB, subjectType, subjectId string, lookup bool, minLevel *string) *models.PermissionList {
-	responder := bySubjectAttempt(db, subjectType, subjectId, lookup, minLevel)
+func bySubject(db *sql.DB, subjectType, subjectID string, lookup bool, minLevel *string) *models.PermissionList {
+	responder := bySubjectAttempt(db, subjectType, subjectID, lookup, minLevel)
 	return responder.(*permissions.BySubjectOK).Payload
 }
 
 func bySubjectAndResourceTypeAttempt(
-	db *sql.DB, subjectType, subjectId, resourceType string, lookup bool, minLevel *string,
+	db *sql.DB, subjectType, subjectID, resourceType string, lookup bool, minLevel *string,
 ) middleware.Responder {
 
 	// Build the request handler.
@@ -54,7 +55,7 @@ func bySubjectAndResourceTypeAttempt(
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectAndResourceTypeParams{
 		SubjectType:  subjectType,
-		SubjectID:    subjectId,
+		SubjectID:    subjectID,
 		ResourceType: resourceType,
 		Lookup:       &lookup,
 		MinLevel:     minLevel,
@@ -63,14 +64,14 @@ func bySubjectAndResourceTypeAttempt(
 }
 
 func bySubjectAndResourceType(
-	db *sql.DB, subjectType, subjectId, resourceType string, lookup bool, minLevel *string,
+	db *sql.DB, subjectType, subjectID, resourceType string, lookup bool, minLevel *string,
 ) *models.PermissionList {
-	responder := bySubjectAndResourceTypeAttempt(db, subjectType, subjectId, resourceType, lookup, minLevel)
+	responder := bySubjectAndResourceTypeAttempt(db, subjectType, subjectID, resourceType, lookup, minLevel)
 	return responder.(*permissions.BySubjectAndResourceTypeOK).Payload
 }
 
 func bySubjectAndResourceAttempt(
-	db *sql.DB, subjectType, subjectId, resourceType, resourceName string, lookup bool, minLevel *string,
+	db *sql.DB, subjectType, subjectID, resourceType, resourceName string, lookup bool, minLevel *string,
 ) middleware.Responder {
 
 	// Build the request handler.
@@ -79,7 +80,7 @@ func bySubjectAndResourceAttempt(
 	// Attempt to look up the permissions.
 	params := permissions.BySubjectAndResourceParams{
 		SubjectType:  subjectType,
-		SubjectID:    subjectId,
+		SubjectID:    subjectID,
 		ResourceType: resourceType,
 		ResourceName: resourceName,
 		Lookup:       &lookup,
@@ -89,14 +90,14 @@ func bySubjectAndResourceAttempt(
 }
 
 func bySubjectAndResource(
-	db *sql.DB, subjectType, subjectId, resourceType, resourceName string, lookup bool, minLevel *string,
+	db *sql.DB, subjectType, subjectID, resourceType, resourceName string, lookup bool, minLevel *string,
 ) *models.PermissionList {
-	responder := bySubjectAndResourceAttempt(db, subjectType, subjectId, resourceType, resourceName, lookup, minLevel)
+	responder := bySubjectAndResourceAttempt(db, subjectType, subjectID, resourceType, resourceName, lookup, minLevel)
 	return responder.(*permissions.BySubjectAndResourceOK).Payload
 }
 
 func TestBySubject(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -121,7 +122,7 @@ func TestBySubject(t *testing.T) {
 }
 
 func TestBySubjectMultiplePermissions(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -147,7 +148,7 @@ func TestBySubjectMultiplePermissions(t *testing.T) {
 }
 
 func TestBySubjectIncorrectSubjectType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -171,7 +172,7 @@ func TestBySubjectIncorrectSubjectType(t *testing.T) {
 }
 
 func TestBySubjectGroupsNotTransitive(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -198,7 +199,7 @@ func TestBySubjectGroupsNotTransitive(t *testing.T) {
 }
 
 func TestBySubjectNonLookup(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -235,7 +236,7 @@ func TestBySubjectNonLookup(t *testing.T) {
 }
 
 func TestBySubjectMinLevel(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -266,7 +267,7 @@ func TestBySubjectMinLevel(t *testing.T) {
 }
 
 func TestBySubjectAndResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -308,7 +309,7 @@ func TestBySubjectAndResourceType(t *testing.T) {
 }
 
 func TestBySubjectAndResourceTypeIncorrectSubjectType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -333,7 +334,7 @@ func TestBySubjectAndResourceTypeIncorrectSubjectType(t *testing.T) {
 }
 
 func TestBySubjectAndResourceTypeUnknownResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -356,7 +357,7 @@ func TestBySubjectAndResourceTypeUnknownResourceType(t *testing.T) {
 }
 
 func TestBySubjectAndResourceTypeGroupsNotTransitive(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -383,7 +384,7 @@ func TestBySubjectAndResourceTypeGroupsNotTransitive(t *testing.T) {
 }
 
 func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -445,7 +446,7 @@ func TestBySubjectAndResourceTypeNonLookup(t *testing.T) {
 }
 
 func TestBySubjectAndResourceTypeMinLevel(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -488,7 +489,7 @@ func TestBySubjectAndResourceTypeMinLevel(t *testing.T) {
 }
 
 func TestBySubjectAndResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -529,7 +530,7 @@ func TestBySubjectAndResource(t *testing.T) {
 }
 
 func TestBySubjectAndResourceNonLookup(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -570,7 +571,7 @@ func TestBySubjectAndResourceNonLookup(t *testing.T) {
 }
 
 func TestBySubjectAndResourceMinLevel(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 

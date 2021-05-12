@@ -3,9 +3,10 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/resources"
-	"testing"
 
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	impl "github.com/cyverse-de/permissions/restapi/impl/resources"
@@ -108,7 +109,7 @@ func deleteResourceByName(db *sql.DB, resourceTypeName, name string) {
 }
 
 func TestAddResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -146,7 +147,7 @@ func TestAddResource(t *testing.T) {
 }
 
 func TestAddDuplicateResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -169,7 +170,7 @@ func TestAddDuplicateResource(t *testing.T) {
 }
 
 func TestAddResourceInvalidType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -191,7 +192,7 @@ func TestAddResourceInvalidType(t *testing.T) {
 }
 
 func TestListResources(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -219,7 +220,7 @@ func TestListResources(t *testing.T) {
 }
 
 func TestListResourcesByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -248,7 +249,7 @@ func TestListResourcesByName(t *testing.T) {
 }
 
 func TestListResourcesByType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -277,7 +278,7 @@ func TestListResourcesByType(t *testing.T) {
 }
 
 func TestListResourcesByNameAndType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -308,7 +309,7 @@ func TestListResourcesByNameAndType(t *testing.T) {
 }
 
 func TestListResourcesEmpty(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -323,7 +324,7 @@ func TestListResourcesEmpty(t *testing.T) {
 }
 
 func TestUpdateResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -360,7 +361,7 @@ func TestUpdateResource(t *testing.T) {
 }
 
 func TestUpdateNonExistentResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -369,18 +370,18 @@ func TestUpdateNonExistentResource(t *testing.T) {
 	addDefaultResourceTypes(db, t)
 
 	// Attempt to update a non-existent resource.
-	responder := updateResourceAttempt(db, FAKE_ID, "foo")
+	responder := updateResourceAttempt(db, FakeID, "foo")
 
 	// Verify that we got the expected result.
 	errorOut := responder.(*resources.UpdateResourceNotFound).Payload
-	expected := fmt.Sprintf("resource, %s, not found", FAKE_ID)
+	expected := fmt.Sprintf("resource, %s, not found", FakeID)
 	if *errorOut.Reason != expected {
 		t.Errorf("unexpected failure message: %s", *errorOut.Reason)
 	}
 }
 
 func TestUpdateResourceDuplicateName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -404,7 +405,7 @@ func TestUpdateResourceDuplicateName(t *testing.T) {
 }
 
 func TestDeleteResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -424,7 +425,7 @@ func TestDeleteResource(t *testing.T) {
 }
 
 func TestDeleteResourceByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -444,7 +445,7 @@ func TestDeleteResourceByName(t *testing.T) {
 }
 
 func TestDeleteNonExistentResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -453,18 +454,18 @@ func TestDeleteNonExistentResource(t *testing.T) {
 	addDefaultResourceTypes(db, t)
 
 	// Attempt to delete a non-existent resource.
-	responder := deleteResourceAttempt(db, FAKE_ID)
+	responder := deleteResourceAttempt(db, FakeID)
 
 	// Verify that we got the expected result.
 	errorOut := responder.(*resources.DeleteResourceNotFound).Payload
-	expected := fmt.Sprintf("resource, %s, not found", FAKE_ID)
+	expected := fmt.Sprintf("resource, %s, not found", FakeID)
 	if *errorOut.Reason != expected {
 		t.Errorf("unexpected failure message: %s", *errorOut.Reason)
 	}
 }
 
 func TestDeleteNonExistentResourceByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 

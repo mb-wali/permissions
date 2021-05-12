@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -49,11 +50,12 @@ func rowToResource(row *sql.Row) (*models.ResourceOut, error) {
 	return &resource, nil
 }
 
-func CountResourcesOfType(tx *sql.Tx, resourceTypeId *string) (int64, error) {
+// CountResourcesOfType counts the number of resources of the given type.
+func CountResourcesOfType(tx *sql.Tx, resourceTypeID *string) (int64, error) {
 
 	// Query the database.
 	query := "SELECT count(*) FROM resources WHERE resource_type_id = $1"
-	row := tx.QueryRow(query, resourceTypeId)
+	row := tx.QueryRow(query, resourceTypeID)
 
 	// Return the result.
 	var count int64
@@ -63,6 +65,7 @@ func CountResourcesOfType(tx *sql.Tx, resourceTypeId *string) (int64, error) {
 	return count, nil
 }
 
+// ResourceExists determines whether or not the resource with the given ID exists.
 func ResourceExists(tx *sql.Tx, id *string) (bool, error) {
 
 	// Query the database.
@@ -77,13 +80,15 @@ func ResourceExists(tx *sql.Tx, id *string) (bool, error) {
 	return count > 0, nil
 }
 
-func GetResourceByName(tx *sql.Tx, name *string, resourceTypeId *string) (*models.ResourceOut, error) {
+// GetResourceByName obtains information about all resources with the given name. Multiple resources may have the same
+// name as long as the types are different.
+func GetResourceByName(tx *sql.Tx, name *string, resourceTypeID *string) (*models.ResourceOut, error) {
 
 	// Query the database.
 	query := `SELECT r.id, r.name, t.name AS resource_type
             FROM resources r JOIN resource_types t ON r.resource_type_id = t.id
             WHERE t.id = $1 and r.name = $2`
-	rows, err := tx.Query(query, resourceTypeId, name)
+	rows, err := tx.Query(query, resourceTypeID, name)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +98,7 @@ func GetResourceByName(tx *sql.Tx, name *string, resourceTypeId *string) (*model
 	return rowsToResource(rows, fmt.Errorf("found multiple resources of the same type named, '%s'", *name))
 }
 
+// GetResourceByNameAndType obtains information about the resource with the given name and type.
 func GetResourceByNameAndType(tx *sql.Tx, name, resourceTypeName string) (*models.ResourceOut, error) {
 
 	// Query the database.
@@ -110,6 +116,7 @@ func GetResourceByNameAndType(tx *sql.Tx, name, resourceTypeName string) (*model
 	return rowsToResource(rows, duplicateErr)
 }
 
+// GetDuplicateResourceByName obtains information about duplicate resources in the database.
 func GetDuplicateResourceByName(tx *sql.Tx, id *string, name *string) (*models.ResourceOut, error) {
 
 	// Query the database.
@@ -128,17 +135,19 @@ func GetDuplicateResourceByName(tx *sql.Tx, id *string, name *string) (*models.R
 	return rowsToResource(rows, fmt.Errorf("found multiple resources of the same type named, '%s'", *name))
 }
 
-func AddResource(tx *sql.Tx, name *string, resourceTypeId *string) (*models.ResourceOut, error) {
+// AddResource adds a resource to the database.
+func AddResource(tx *sql.Tx, name *string, resourceTypeID *string) (*models.ResourceOut, error) {
 
 	// Update the database.
 	query := `INSERT INTO resources (name, resource_type_id) VALUES ($1, $2)
             RETURNING id, name, (SELECT name FROM resource_types t WHERE t.id = resource_type_id)`
-	row := tx.QueryRow(query, name, resourceTypeId)
+	row := tx.QueryRow(query, name, resourceTypeID)
 
 	// Return the result.
 	return rowToResource(row)
 }
 
+// UpdateResource updates a resource in the database.
 func UpdateResource(tx *sql.Tx, id *string, name *string) (*models.ResourceOut, error) {
 
 	// Update the database.
@@ -150,6 +159,7 @@ func UpdateResource(tx *sql.Tx, id *string, name *string) (*models.ResourceOut, 
 	return rowToResource(row)
 }
 
+// ListResources lists resources in the database, optionally filtering by resource type and resource name.
 func ListResources(tx *sql.Tx, resourceTypeName, resourceName *string) ([]*models.ResourceOut, error) {
 
 	// Query the database.
@@ -184,6 +194,7 @@ func ListResources(tx *sql.Tx, resourceTypeName, resourceName *string) ([]*model
 	return rowsToResourceList(rows)
 }
 
+// DeleteResource removes a resource from the database.
 func DeleteResource(tx *sql.Tx, id *string) error {
 
 	// Update the database.

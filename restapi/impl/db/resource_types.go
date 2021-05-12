@@ -3,9 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/models"
 )
 
+// ListResourceTypes lists all defined resource types.
 func ListResourceTypes(tx *sql.Tx, resourceTypeName *string) ([]*models.ResourceTypeOut, error) {
 
 	// Query the database.
@@ -41,6 +43,7 @@ func ListResourceTypes(tx *sql.Tx, resourceTypeName *string) ([]*models.Resource
 	return resourceTypes, nil
 }
 
+// GetResourceTypeByName gets information about the resource type with the given name.
 func GetResourceTypeByName(tx *sql.Tx, name *string) (*models.ResourceTypeOut, error) {
 
 	// Query the database.
@@ -75,6 +78,8 @@ func GetResourceTypeByName(tx *sql.Tx, name *string) (*models.ResourceTypeOut, e
 	return resourceTypes[0], nil
 }
 
+// GetDuplicateResourceTypeByName returns information about the resource type with the given name, and checks for
+// duplicates
 func GetDuplicateResourceTypeByName(tx *sql.Tx, id *string, name *string) (*models.ResourceTypeOut, error) {
 
 	// Query the database.
@@ -110,6 +115,7 @@ func GetDuplicateResourceTypeByName(tx *sql.Tx, id *string, name *string) (*mode
 	return resourceTypes[0], nil
 }
 
+// ResourceTypeExists determines whether or not the resource type with the given ID exists.
 func ResourceTypeExists(tx *sql.Tx, id *string) (bool, error) {
 
 	// Query the database.
@@ -124,6 +130,7 @@ func ResourceTypeExists(tx *sql.Tx, id *string) (bool, error) {
 	return count > 0, nil
 }
 
+// AddNewResourceType adds a new resource type to the database.
 func AddNewResourceType(tx *sql.Tx, resourceTypeIn *models.ResourceTypeIn) (*models.ResourceTypeOut, error) {
 
 	// Insert the resource type.
@@ -140,6 +147,7 @@ func AddNewResourceType(tx *sql.Tx, resourceTypeIn *models.ResourceTypeIn) (*mod
 	return &resourceTypeOut, nil
 }
 
+// UpdateResourceType updates a resource type in the database.
 func UpdateResourceType(
 	tx *sql.Tx,
 	id *string,
@@ -163,6 +171,7 @@ func UpdateResourceType(
 	return &resourceTypeOut, nil
 }
 
+// DeleteResourceType removes a resource type from the database.
 func DeleteResourceType(tx *sql.Tx, id *string) error {
 
 	// Update the database.

@@ -1,5 +1,4 @@
-/vendor/bin
-/vendor/pkg
+/vendor
 /bin
 /pkg
 /.idea

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildListResourcesHandler builds the request handler for the list resources endpoint.
 func BuildListResourcesHandler(db *sql.DB) func(resources.ListResourcesParams) middleware.Responder {
 
 	// Return the handler function.

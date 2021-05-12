@@ -3,6 +3,7 @@ package permissions
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -30,6 +31,7 @@ func bySubjectAndResourceBadRequest(reason string) middleware.Responder {
 	)
 }
 
+// BuildBySubjectAndResourceHandler builds the request handler for the permissions by subject and resource endpoint.
 func BuildBySubjectAndResourceHandler(
 	db *sql.DB, grouperClient grouper.Grouper,
 ) func(permissions.BySubjectAndResourceParams) middleware.Responder {
@@ -37,7 +39,7 @@ func BuildBySubjectAndResourceHandler(
 	// Return the handler function.
 	return func(params permissions.BySubjectAndResourceParams) middleware.Responder {
 		subjectType := params.SubjectType
-		subjectId := params.SubjectID
+		subjectID := params.SubjectID
 		resourceTypeName := params.ResourceType
 		resourceName := params.ResourceName
 		lookup := extractLookupFlag(params.Lookup)
@@ -51,15 +53,15 @@ func BuildBySubjectAndResourceHandler(
 		}
 
 		// Verify that the subject type is correct.
-		subject, err := permsdb.GetSubjectByExternalId(tx, models.ExternalSubjectID(subjectId))
+		subject, err := permsdb.GetSubjectByExternalID(tx, models.ExternalSubjectID(subjectID))
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)
 			return bySubjectAndResourceInternalServerError(err.Error())
 		}
-		if subject != nil && string(subject.SubjectType) != subjectType {
+		if subject != nil && string(*subject.SubjectType) != subjectType {
 			tx.Rollback()
-			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectId, subjectType)
+			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectID, subjectType)
 			return bySubjectAndResourceBadRequest(reason)
 		}
 
@@ -88,7 +90,7 @@ func BuildBySubjectAndResourceHandler(
 		}
 
 		// Get the list of subject IDs to use for the query.
-		subjectIds, err := buildSubjectIdList(grouperClient, subjectType, subjectId, lookup)
+		subjectIds, err := buildSubjectIDList(grouperClient, subjectType, subjectID, lookup)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

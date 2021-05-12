@@ -3,6 +3,7 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildUpdateSubjectHandler builds the request handler for the update subject endpoint.
 func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) middleware.Responder {
 
 	// Return the handler function.
@@ -46,7 +48,7 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 		}
 
 		// Verify that a subject with the same external subject ID doesn't exist.
-		duplicateExists, err := permsdb.DuplicateSubjectExists(tx, id, subjectIn.SubjectID)
+		duplicateExists, err := permsdb.DuplicateSubjectExists(tx, id, *subjectIn.SubjectID)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)
@@ -56,14 +58,14 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 			)
 		}
 		if duplicateExists {
-			reason := fmt.Sprintf("another subject with the ID, %s, already exists", string(subjectIn.SubjectID))
+			reason := fmt.Sprintf("another subject with the ID, %s, already exists", string(*subjectIn.SubjectID))
 			return subjects.NewUpdateSubjectBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 
 		// Update the subject.
-		subjectOut, err := permsdb.UpdateSubject(tx, id, subjectIn.SubjectID, subjectIn.SubjectType)
+		subjectOut, err := permsdb.UpdateSubject(tx, id, *subjectIn.SubjectID, *subjectIn.SubjectType)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)
