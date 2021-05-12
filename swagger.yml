@@ -264,6 +264,38 @@ definitions:
         description: "The list of permissions."
         items:
           $ref: "#/definitions/permission"
+  abbreviated_permission:
+    type: object
+    description: "Abbrevated information about permissions granted to a user."
+    required:
+      - id
+      - resource_name
+      - resource_type
+      - permission_level
+    properties:
+      id:
+        $ref: "#/definitions/permission_id"
+      resource_name:
+        type: string
+        description: "The resource name."
+        minLength: 1
+      resource_type:
+        type: string
+        description: "The resource type name."
+        minLength: 1
+      permission_level:
+        $ref: "#/definitions/permission_level"
+  abbreviated_permission_list:
+    type: object
+    description: "A list of matching permissions."
+    required:
+      - permissions
+    properties:
+      permissions:
+        type: array
+        description: "The list of permissions."
+        items:
+          $ref: "#/definitions/abbreviated_permission"
 info:
   description: >-
     Manages Permissions for the CyVerse Discovery Environment and related applications.
@@ -998,6 +1030,67 @@ paths:
           description: "OK"
           schema:
             $ref: "#/definitions/permission_list"
+        400:
+          $ref: "#/responses/bad_request"
+        500:
+          $ref: "#/responses/internal_server_error"
+  /permissions/abbreviated/subjects/{subject_type}/{subject_id}/{resource_type}:
+    parameters:
+      - name: subject_type
+        type: string
+        enum:
+          - user
+          - group
+        description: "The subject type name."
+        in: path
+        required: True
+      - name: subject_id
+        type: string
+        description: "The external subject identifier."
+        in: path
+        required: True
+      - name: resource_type
+        type: string
+        description: "The resource type name."
+        in: path
+        required: True
+      - name: lookup
+        type: boolean
+        description: >-
+          True if a permission lookup should be performed. A permission lookup differs from standard permisison
+          retrieval in two ways. First, only the most permissive permission level available to the subject is
+          returned for any given resource. Second, if the subject happens to be a user then permissions granted
+          to groups that the user belongs to are also included in the results. This parameter is optional and
+          defaults to False.
+        in: query
+        default: False
+      - name: min_level
+        type: string
+        enum:
+          - read
+          - admin
+          - write
+          - own
+        description: >-
+          The minimum permission level required to qualify for the result set. All permission levels qualify by
+          default.
+        in: query
+    get:
+      tags:
+        - permissions
+      summary: "Look Up Abbreviated Permissions by Subject and Resource Type"
+      description: >-
+        Looks up all permissions granted to a subject for resources of the given type. If lookup mode is enabled and
+        the subject is a user, the most lenient permissions granted to the subject or any groups the subject belongs
+        to will be listed. If lookup mode is not enabled or the subject is a group then only permissions assigned
+        directly to the subject will be listed. This endpoint will return an error status if the subject ID is in use
+        and associated with a different subject type.
+      operationId: bySubjectAndResourceTypeAbbreviated
+      responses:
+        200:
+          description: "OK"
+          schema:
+            $ref: "#/definitions/abbreviated_permission_list"
         400:
           $ref: "#/responses/bad_request"
         500:
