@@ -5,23 +5,23 @@ import (
 )
 
 type PermissionDto struct {
-	ID                string
-	InternalSubjectID string
-	SubjectID         string
-	SubjectType       string
+	ID                *models.PermissionID
+	InternalSubjectID *models.InternalSubjectID
+	SubjectID         *models.ExternalSubjectID
+	SubjectType       *models.SubjectType
 	ResourceID        string
 	ResourceName      string
 	ResourceType      string
-	PermissionLevel   string
+	PermissionLevel   *models.PermissionLevel
 }
 
 func (p *PermissionDto) ToPermission() *models.Permission {
 
 	// Extract the subject.
 	subject := &models.SubjectOut{
-		ID:          models.InternalSubjectID(p.InternalSubjectID),
-		SubjectID:   models.ExternalSubjectID(p.SubjectID),
-		SubjectType: models.SubjectType(p.SubjectType),
+		ID:          p.InternalSubjectID,
+		SubjectID:   p.SubjectID,
+		SubjectType: p.SubjectType,
 	}
 
 	// Extract the resource.
@@ -33,8 +33,8 @@ func (p *PermissionDto) ToPermission() *models.Permission {
 
 	// Extract the permission itself.
 	permission := &models.Permission{
-		ID:              models.PermissionID(p.ID),
-		PermissionLevel: models.PermissionLevel(p.PermissionLevel),
+		ID:              p.ID,
+		PermissionLevel: p.PermissionLevel,
 		Resource:        resource,
 		Subject:         subject,
 	}

@@ -3,6 +3,7 @@ package permissions
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -56,7 +57,7 @@ func BuildBySubjectAndResourceTypeHandler(
 			logger.Log.Error(err)
 			return bySubjectAndResourceTypeInternalServerError(err.Error())
 		}
-		if subject != nil && string(subject.SubjectType) != subjectType {
+		if subject != nil && string(*subject.SubjectType) != subjectType {
 			tx.Rollback()
 			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectId, subjectType)
 			return bySubjectAndResourceTypeBadRequest(reason)

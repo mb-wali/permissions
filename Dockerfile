@@ -1,11 +1,11 @@
-FROM golang:1.11-alpine
+FROM golang:1.16-alpine
 
 RUN apk add --no-cache git
 RUN go get -u github.com/jstemmer/go-junit-report
 
-COPY . /go/src/github.com/cyverse-de/permissions/
-ENV CGO_ENABLED=0
-RUN go install github.com/cyverse-de/permissions/... \
+COPY . /permissions/
+WORKDIR /permissions/
+RUN go install ./... \
     && cp /go/bin/permissions-server /bin/permissions
 
 WORKDIR /

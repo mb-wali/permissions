@@ -3,6 +3,7 @@ package subjects
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -57,7 +58,7 @@ func BuildDeleteSubjectByExternalIdHandler(
 		}
 
 		// Delete the subject.
-		if err := permsdb.DeleteSubject(tx, subject.ID); err != nil {
+		if err := permsdb.DeleteSubject(tx, *subject.ID); err != nil {
 			tx.Rollback()
 			return deleteSubjectByExternalIdInternalServerError(err.Error())
 		}

@@ -3,6 +3,7 @@ package permissions
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -71,7 +72,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		}
 
 		// Look up the permission.
-		permission, err := permsdb.GetPermission(tx, subject.ID, *resource.ID)
+		permission, err := permsdb.GetPermission(tx, *subject.ID, *resource.ID)
 		if err != nil {
 			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
@@ -84,7 +85,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		}
 
 		// Delete the permission.
-		err = permsdb.DeletePermission(tx, permission.ID)
+		err = permsdb.DeletePermission(tx, *permission.ID)
 		if err != nil {
 			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())

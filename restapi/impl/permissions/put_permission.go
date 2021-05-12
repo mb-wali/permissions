@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -44,9 +45,11 @@ func BuildPutPermissionHandler(
 		}
 
 		// Either get or add the subject.
+		subjectID := models.ExternalSubjectID(params.SubjectID)
+		subjectType := models.SubjectType(params.SubjectType)
 		subjectIn := &models.SubjectIn{
-			SubjectID:   models.ExternalSubjectID(params.SubjectID),
-			SubjectType: models.SubjectType(params.SubjectType),
+			SubjectID:   &subjectID,
+			SubjectType: &subjectType,
 		}
 		subject, errorResponder := getOrAddSubject(tx, subjectIn, erf)
 		if errorResponder != nil {
@@ -66,14 +69,14 @@ func BuildPutPermissionHandler(
 		}
 
 		// Look up the permission level.
-		permissionLevelId, errorResponder := getPermissionLevel(tx, req.PermissionLevel, erf)
+		permissionLevelId, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
 		if errorResponder != nil {
 			tx.Rollback()
 			return errorResponder
 		}
 
 		// Either update or add the permission.
-		permission, err := permsdb.UpsertPermission(tx, subject.ID, *resource.ID, *permissionLevelId)
+		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelId)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

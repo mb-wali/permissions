@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/models"
 )
 
@@ -460,7 +461,7 @@ func CopyPermissions(tx *sql.Tx, source, dest *models.SubjectOut) error {
                WHERE id IN (d.permission_level_id, EXCLUDED.permission_level_id)
                ORDER BY precedence LIMIT 1
            )`
-	_, err := tx.Exec(stmt, string(source.ID), string(dest.ID))
+	_, err := tx.Exec(stmt, &source.ID, &dest.ID)
 
 	return err
 }

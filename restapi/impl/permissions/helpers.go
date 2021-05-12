@@ -3,6 +3,7 @@ package permissions
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -23,7 +24,7 @@ func getOrAddSubject(
 ) (*models.SubjectOut, middleware.Responder) {
 
 	// Attempt to look up the subject.
-	subject, err := permsdb.GetSubject(tx, subjectIn.SubjectID, subjectIn.SubjectType)
+	subject, err := permsdb.GetSubject(tx, *subjectIn.SubjectID, *subjectIn.SubjectType)
 	if err != nil {
 		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
@@ -33,18 +34,18 @@ func getOrAddSubject(
 	}
 
 	// Make sure that another subject with the same ID doesn't exist already.
-	exists, err := permsdb.SubjectIdExists(tx, subjectIn.SubjectID)
+	exists, err := permsdb.SubjectIdExists(tx, *subjectIn.SubjectID)
 	if err != nil {
 		logger.Log.Error(err)
 		return nil, erf.InternalServerError((err.Error()))
 	}
 	if exists {
-		reason := fmt.Sprintf("another subject with ID, %s, already exists", string(subjectIn.SubjectID))
+		reason := fmt.Sprintf("another subject with ID, %s, already exists", string(*subjectIn.SubjectID))
 		return nil, erf.BadRequest(reason)
 	}
 
 	// Attempt to add the subject.
-	subject, err = permsdb.AddSubject(tx, subjectIn.SubjectID, subjectIn.SubjectType)
+	subject, err = permsdb.AddSubject(tx, *subjectIn.SubjectID, *subjectIn.SubjectType)
 	if err != nil {
 		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())

@@ -5,17 +5,17 @@ import (
 )
 
 type SubjectDto struct {
-	ID          string
-	SubjectID   string
-	SubjectType string
+	ID          *models.InternalSubjectID
+	SubjectID   *models.ExternalSubjectID
+	SubjectType *models.SubjectType
 }
 
 func (s *SubjectDto) ToSubjectOut() *models.SubjectOut {
 	var subjectOut models.SubjectOut
 
-	subjectOut.ID = models.InternalSubjectID(s.ID)
-	subjectOut.SubjectID = models.ExternalSubjectID(s.SubjectID)
-	subjectOut.SubjectType = models.SubjectType(s.SubjectType)
+	subjectOut.ID = s.ID
+	subjectOut.SubjectID = s.SubjectID
+	subjectOut.SubjectType = s.SubjectType
 
 	return &subjectOut
 }

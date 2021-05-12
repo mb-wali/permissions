@@ -2,18 +2,19 @@ package test
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/models"
 	impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
 	"github.com/cyverse-de/permissions/restapi/operations/permissions"
 	middleware "github.com/go-openapi/runtime/middleware"
-	"testing"
 )
 
 var groups = []*grouper.GroupInfo{
-	&grouper.GroupInfo{ID: "g1id", Name: "g1"},
-	&grouper.GroupInfo{ID: "g2id", Name: "g2"},
-	&grouper.GroupInfo{ID: "g3id", Name: "g3"},
+	{ID: "g1id", Name: "g1"},
+	{ID: "g2id", Name: "g2"},
+	{ID: "g3id", Name: "g3"},
 }
 
 var groupMemberships = map[string][]*grouper.GroupInfo{

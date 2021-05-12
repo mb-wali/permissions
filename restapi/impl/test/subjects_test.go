@@ -3,9 +3,10 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
-	"testing"
 
 	impl "github.com/cyverse-de/permissions/restapi/impl/subjects"
 	middleware "github.com/go-openapi/runtime/middleware"
@@ -13,11 +14,11 @@ import (
 
 func checkSubject(t *testing.T, subjects []*models.SubjectOut, i int32, subjectId, subjectType string) {
 	actual := subjects[i]
-	if actual.SubjectID != models.ExternalSubjectID(subjectId) {
-		t.Errorf("unexpected subject ID: %s", string(actual.SubjectID))
+	if *actual.SubjectID != models.ExternalSubjectID(subjectId) {
+		t.Errorf("unexpected subject ID: %s", string(*actual.SubjectID))
 	}
-	if actual.SubjectType != models.SubjectType(subjectType) {
-		t.Errorf("unexpected subject type: %s", string(actual.SubjectType))
+	if *actual.SubjectType != models.SubjectType(subjectType) {
+		t.Errorf("unexpected subject type: %s", string(*actual.SubjectType))
 	}
 }
 
@@ -31,7 +32,7 @@ func addSubjectAttempt(
 	handler := impl.BuildAddSubjectHandler(db)
 
 	// Attempt to add the subject to the database.
-	subjectIn := &models.SubjectIn{SubjectID: subjectId, SubjectType: subjectType}
+	subjectIn := &models.SubjectIn{SubjectID: &subjectId, SubjectType: &subjectType}
 	params := subjects.AddSubjectParams{SubjectIn: subjectIn}
 	return handler(params)
 }
@@ -67,7 +68,7 @@ func updateSubjectAttempt(
 	handler := impl.BuildUpdateSubjectHandler(db)
 
 	// Attempt to update the subject.
-	subjectIn := &models.SubjectIn{SubjectID: subjectId, SubjectType: subjectType}
+	subjectIn := &models.SubjectIn{SubjectID: &subjectId, SubjectType: &subjectType}
 	params := subjects.UpdateSubjectParams{ID: string(id), SubjectIn: subjectIn}
 	return handler(params)
 }
@@ -126,11 +127,11 @@ func TestAddSubject(t *testing.T) {
 	subject := addSubject(db, subjectId, subjectType)
 
 	// Verify that we got the expected response.
-	if subject.SubjectID != subjectId {
-		t.Errorf("unexpected subject ID: %s", subject.SubjectID)
+	if *subject.SubjectID != subjectId {
+		t.Errorf("unexpected subject ID: %s", *subject.SubjectID)
 	}
-	if subject.SubjectType != subjectType {
-		t.Errorf("unexpected subject type: %s", subject.SubjectType)
+	if *subject.SubjectType != subjectType {
+		t.Errorf("unexpected subject type: %s", *subject.SubjectType)
 	}
 }
 
@@ -180,13 +181,13 @@ func TestListSubjects(t *testing.T) {
 	// Verify that we got the expected result.
 	actual := subjectList[0]
 	if expected.ID != actual.ID {
-		t.Errorf("unexpected ID: %s", string(actual.ID))
+		t.Errorf("unexpected ID: %s", string(*actual.ID))
 	}
 	if expected.SubjectID != actual.SubjectID {
-		t.Errorf("unexpected subject ID: %s", string(actual.SubjectID))
+		t.Errorf("unexpected subject ID: %s", string(*actual.SubjectID))
 	}
 	if expected.SubjectType != actual.SubjectType {
-		t.Errorf("unexpected subject type: %s", string(actual.SubjectType))
+		t.Errorf("unexpected subject type: %s", string(*actual.SubjectType))
 	}
 }
 
@@ -214,13 +215,13 @@ func TestListSubjectsByExternalId(t *testing.T) {
 	// Verify that we got the expected result.
 	actual := subjectList[0]
 	if expected.ID != actual.ID {
-		t.Errorf("unexpected ID: %s", string(actual.ID))
+		t.Errorf("unexpected ID: %s", string(*actual.ID))
 	}
 	if expected.SubjectID != actual.SubjectID {
-		t.Errorf("unexpected subject ID: %s", string(actual.SubjectID))
+		t.Errorf("unexpected subject ID: %s", string(*actual.SubjectID))
 	}
 	if expected.SubjectType != actual.SubjectType {
-		t.Errorf("unexpected subject type: %s", string(actual.SubjectType))
+		t.Errorf("unexpected subject type: %s", string(*actual.SubjectType))
 	}
 }
 
@@ -310,17 +311,17 @@ func TestUpdateSubject(t *testing.T) {
 	// Change the subject ID and type.
 	newId := models.ExternalSubjectID("s2")
 	newType := models.SubjectType("group")
-	new := updateSubject(db, orig.ID, newId, newType)
+	new := updateSubject(db, *orig.ID, newId, newType)
 
 	// Verify that we got the expected result.
 	if new.ID != orig.ID {
-		t.Errorf("unexpected internal ID returned: %s", new.ID)
+		t.Errorf("unexpected internal ID returned: %s", *new.ID)
 	}
-	if new.SubjectID != newId {
-		t.Errorf("unexpected external ID returned: %s", new.SubjectID)
+	if *new.SubjectID != newId {
+		t.Errorf("unexpected external ID returned: %s", *new.SubjectID)
 	}
-	if new.SubjectType != newType {
-		t.Errorf("unexpected subject type returned: %s", new.SubjectType)
+	if *new.SubjectType != newType {
+		t.Errorf("unexpected subject type returned: %s", *new.SubjectType)
 	}
 
 	// List the subjects and verify that we get the expected number of results.
@@ -332,13 +333,13 @@ func TestUpdateSubject(t *testing.T) {
 	// Verify that we get the expected result.
 	listed := subjectList[0]
 	if listed.ID != orig.ID {
-		t.Errorf("unexpected internal ID listed: %s", listed.ID)
+		t.Errorf("unexpected internal ID listed: %s", *listed.ID)
 	}
-	if listed.SubjectID != newId {
-		t.Errorf("unexpected external ID listed: %s", listed.SubjectID)
+	if *listed.SubjectID != newId {
+		t.Errorf("unexpected external ID listed: %s", *listed.SubjectID)
 	}
-	if listed.SubjectType != newType {
-		t.Errorf("unexpected subject type listed: %s", listed.SubjectType)
+	if *listed.SubjectType != newType {
+		t.Errorf("unexpected subject type listed: %s", *listed.SubjectType)
 	}
 }
 
@@ -382,7 +383,7 @@ func TestUpdateSubjectDuplicate(t *testing.T) {
 	s2 := addSubject(db, s2Id, s2Type)
 
 	// Attempt to change the ID of the second subject to be the same as the first.
-	responder := updateSubjectAttempt(db, s2.ID, s1.SubjectID, s2.SubjectType)
+	responder := updateSubjectAttempt(db, *s2.ID, *s1.SubjectID, *s2.SubjectType)
 	errorOut := responder.(*subjects.UpdateSubjectBadRequest).Payload
 
 	// Verify that we got the expected error message.
@@ -406,7 +407,7 @@ func TestDeleteSubject(t *testing.T) {
 	s1 := addSubject(db, s1Id, s1Type)
 
 	// Delete the subject.
-	deleteSubject(db, s1.ID)
+	deleteSubject(db, *s1.ID)
 
 	// Verify that the subject was deleted.
 	subjectList := listSubjects(db, nil, nil).Subjects

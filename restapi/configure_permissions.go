@@ -17,7 +17,6 @@ import (
 	swag "github.com/go-openapi/swag"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
-	"github.com/tylerb/graceful"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
@@ -56,10 +55,11 @@ var options struct {
 // Register the command-line options.
 func configureFlags(api *operations.PermissionsAPI) {
 	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
-		swag.CommandLineOptionsGroup{
+		{
 			ShortDescription: "Service Options",
 			LongDescription:  "",
-			Options:          &options},
+			Options:          &options,
+		},
 	}
 }
 
@@ -249,7 +249,7 @@ func configureTLS(tlsConfig *tls.Config) {
 // If you need to modify a config, store server instance to stop it individually later, this is the place.
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix"
-func configureServer(s *graceful.Server, scheme, addr string) {
+func configureServer(s *http.Server, scheme, addr string) {
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.

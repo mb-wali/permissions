@@ -72,7 +72,7 @@ func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permissi
 	// Get a list of subject identifiers.
 	subjectIDs := make([]string, 0)
 	for _, permission := range permissions {
-		subjectIDs = append(subjectIDs, string(permission.Subject.SubjectID))
+		subjectIDs = append(subjectIDs, string(*permission.Subject.SubjectID))
 	}
 
 	// Query the database.
@@ -96,8 +96,9 @@ func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permissi
 
 	// Add the subject IDs to the permission objects.
 	for _, permission := range permissions {
-		sourceID := m[string(permission.Subject.SubjectID)]
-		permission.Subject.SubjectSourceID = models.SubjectSourceID(sourceID)
+		var sourceID models.SubjectSourceID
+		sourceID = models.SubjectSourceID(m[string(*permission.Subject.SubjectID)])
+		permission.Subject.SubjectSourceID = &sourceID
 	}
 
 	return nil
