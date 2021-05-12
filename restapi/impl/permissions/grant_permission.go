@@ -24,6 +24,7 @@ func grantPermissionBadRequest(reason string) middleware.Responder {
 	)
 }
 
+// BuildGrantPermissionHandler builds the request handler for the grant permissions endpoint.
 func BuildGrantPermissionHandler(
 	db *sql.DB, grouperClient grouper.Grouper,
 ) func(permissions.GrantPermissionParams) middleware.Responder {
@@ -59,14 +60,14 @@ func BuildGrantPermissionHandler(
 		}
 
 		// Look up the permission level.
-		permissionLevelId, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
+		permissionLevelID, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
 		if errorResponder != nil {
 			tx.Rollback()
 			return errorResponder
 		}
 
 		// Either update or add the permission.
-		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelId)
+		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelID)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

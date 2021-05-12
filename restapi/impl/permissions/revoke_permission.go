@@ -24,6 +24,7 @@ func revokePermissionNotFound(reason string) middleware.Responder {
 	)
 }
 
+// BuildRevokePermissionHandler builds the request handler for the revoke permission endpoint.
 func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionParams) middleware.Responder {
 
 	// Return the handler function.
@@ -60,14 +61,14 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 
 		// Look up the subject.
 		subjectType := models.SubjectType(params.SubjectType)
-		subjectId := models.ExternalSubjectID(params.SubjectID)
-		subject, err := permsdb.GetSubject(tx, subjectId, subjectType)
+		subjectID := models.ExternalSubjectID(params.SubjectID)
+		subject, err := permsdb.GetSubject(tx, subjectID, subjectType)
 		if err != nil {
 			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}
 		if subject == nil {
-			reason := fmt.Sprintf("subject not found: %s/%s", subjectType, subjectId)
+			reason := fmt.Sprintf("subject not found: %s/%s", subjectType, subjectID)
 			return revokePermissionNotFound(reason)
 		}
 
@@ -79,7 +80,7 @@ func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionP
 		}
 		if permission == nil {
 			reason := fmt.Sprintf(
-				"permission not found: %s/%s:%s/%s", params.ResourceType, params.ResourceName, subjectType, subjectId,
+				"permission not found: %s/%s:%s/%s", params.ResourceType, params.ResourceName, subjectType, subjectID,
 			)
 			return revokePermissionNotFound(reason)
 		}

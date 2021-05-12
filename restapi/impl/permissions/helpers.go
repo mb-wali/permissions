@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// ErrorResponseFns is a structure containing functions that can be used to generate responses for erroneous requests.
 type ErrorResponseFns struct {
 	BadRequest          func(string) middleware.Responder
 	InternalServerError func(string) middleware.Responder
@@ -34,7 +35,7 @@ func getOrAddSubject(
 	}
 
 	// Make sure that another subject with the same ID doesn't exist already.
-	exists, err := permsdb.SubjectIdExists(tx, *subjectIn.SubjectID)
+	exists, err := permsdb.SubjectIDExists(tx, *subjectIn.SubjectID)
 	if err != nil {
 		logger.Log.Error(err)
 		return nil, erf.InternalServerError((err.Error()))
@@ -96,17 +97,17 @@ func getPermissionLevel(
 ) (*string, middleware.Responder) {
 
 	// Look up the permission level.
-	permissionLevelId, err := permsdb.GetPermissionLevelIdByName(tx, level)
+	permissionLevelID, err := permsdb.GetPermissionLevelIDByName(tx, level)
 	if err != nil {
 		logger.Log.Error(err)
 		return nil, erf.InternalServerError(err.Error())
 	}
-	if permissionLevelId == nil {
+	if permissionLevelID == nil {
 		reason := fmt.Sprintf("no permission level named, %s, found", string(level))
 		return nil, erf.BadRequest(reason)
 	}
 
-	return permissionLevelId, nil
+	return permissionLevelID, nil
 }
 
 func extractLookupFlag(lookup *bool) bool {
@@ -116,7 +117,7 @@ func extractLookupFlag(lookup *bool) bool {
 	return false
 }
 
-func groupIdsForSubject(grouperClient grouper.Grouper, subjectType, subjectId string) ([]string, error) {
+func groupIdsForSubject(grouperClient grouper.Grouper, subjectType, subjectID string) ([]string, error) {
 	groupIds := make([]string, 0)
 
 	// Simply return an empty slice if the subject is a group.
@@ -125,7 +126,7 @@ func groupIdsForSubject(grouperClient grouper.Grouper, subjectType, subjectId st
 	}
 
 	// Look up the groups.
-	groups, err := grouperClient.GroupsForSubject(subjectId)
+	groups, err := grouperClient.GroupsForSubject(subjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -138,13 +139,13 @@ func groupIdsForSubject(grouperClient grouper.Grouper, subjectType, subjectId st
 	return groupIds, nil
 }
 
-func buildSubjectIdList(grouperClient grouper.Grouper, subjectType, subjectId string, lookup bool) ([]string, error) {
+func buildSubjectIDList(grouperClient grouper.Grouper, subjectType, subjectID string, lookup bool) ([]string, error) {
 	if lookup {
-		groupIds, err := groupIdsForSubject(grouperClient, subjectType, subjectId)
+		groupIds, err := groupIdsForSubject(grouperClient, subjectType, subjectID)
 		if err != nil {
 			return nil, err
 		}
-		return append(groupIds, subjectId), nil
+		return append(groupIds, subjectID), nil
 	}
-	return []string{subjectId}, nil
+	return []string{subjectID}, nil
 }

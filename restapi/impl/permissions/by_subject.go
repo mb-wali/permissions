@@ -31,6 +31,7 @@ func bySubjectBadRequest(reason string) middleware.Responder {
 	)
 }
 
+// BuildBySubjectHandler builds the request handler for the permissions by subject endpoint
 func BuildBySubjectHandler(
 	db *sql.DB, grouperClient grouper.Grouper,
 ) func(permissions.BySubjectParams) middleware.Responder {
@@ -38,7 +39,7 @@ func BuildBySubjectHandler(
 	// Return the handler function.
 	return func(params permissions.BySubjectParams) middleware.Responder {
 		subjectType := params.SubjectType
-		subjectId := params.SubjectID
+		subjectID := params.SubjectID
 		lookup := extractLookupFlag(params.Lookup)
 		minLevel := params.MinLevel
 
@@ -50,7 +51,7 @@ func BuildBySubjectHandler(
 		}
 
 		// Verify that the subject type is correct.
-		subject, err := permsdb.GetSubjectByExternalId(tx, models.ExternalSubjectID(subjectId))
+		subject, err := permsdb.GetSubjectByExternalID(tx, models.ExternalSubjectID(subjectID))
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)
@@ -58,12 +59,12 @@ func BuildBySubjectHandler(
 		}
 		if subject != nil && string(*subject.SubjectType) != subjectType {
 			tx.Rollback()
-			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectId, subjectType)
+			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectID, subjectType)
 			return bySubjectBadRequest(reason)
 		}
 
 		// Get the list of subject IDs to use for the query.
-		subjectIds, err := buildSubjectIdList(grouperClient, subjectType, subjectId, lookup)
+		subjectIds, err := buildSubjectIDList(grouperClient, subjectType, subjectID, lookup)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

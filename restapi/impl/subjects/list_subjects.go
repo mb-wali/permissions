@@ -2,6 +2,7 @@ package subjects
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -16,6 +17,7 @@ func listSubjectsInternalServerError(reason string) middleware.Responder {
 	)
 }
 
+// BuildListSubjectsHandler builds the request handler for the list subjects endpoint.
 func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) middleware.Responder {
 
 	// Return the handler function.

@@ -2,6 +2,7 @@ package resource_types
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
@@ -29,6 +30,7 @@ func buildResourceTypesGetResponse(
 	return &models.ResourceTypesOut{ResourceTypes: resourceTypes}, nil
 }
 
+// BuildResourceTypesGetHandler builds the request handler for the resource type listing endpoint.
 func BuildResourceTypesGetHandler(db *sql.DB) func(resource_types.GetResourceTypesParams) middleware.Responder {
 
 	// Return the handler function.

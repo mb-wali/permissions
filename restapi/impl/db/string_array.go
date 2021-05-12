@@ -6,12 +6,14 @@ import (
 	"regexp"
 )
 
+// StringArray represents an array of strings that can be used in a database query.
 type StringArray []string
 
 func escape(s string) string {
 	return "\\" + s
 }
 
+// Value returns the formatted array of strings, suitable for use in a query.
 func (a *StringArray) Value() (driver.Value, error) {
 	re := regexp.MustCompile("[\\\\\"]")
 

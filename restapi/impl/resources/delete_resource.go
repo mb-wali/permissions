@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildDeleteResourceHandler builds the request handler for the delete resource endpoint.
 func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams) middleware.Responder {
 
 	// Return the handler function.

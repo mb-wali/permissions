@@ -26,6 +26,7 @@ func copyPermissionsInternalServerError(reason string) middleware.Responder {
 	)
 }
 
+// BuildCopyPermissionsHandler builds the request handler for the copy permissions endpoint.
 func BuildCopyPermissionsHandler(db *sql.DB) func(permissions.CopyPermissionsParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{

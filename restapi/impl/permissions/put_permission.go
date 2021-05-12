@@ -24,6 +24,7 @@ func putPermissionBadRequest(reason string) middleware.Responder {
 	)
 }
 
+// BuildPutPermissionHandler builds the request handler for the put permission endpoint.
 func BuildPutPermissionHandler(
 	db *sql.DB, grouperClient grouper.Grouper,
 ) func(permissions.PutPermissionParams) middleware.Responder {
@@ -69,14 +70,14 @@ func BuildPutPermissionHandler(
 		}
 
 		// Look up the permission level.
-		permissionLevelId, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
+		permissionLevelID, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
 		if errorResponder != nil {
 			tx.Rollback()
 			return errorResponder
 		}
 
 		// Either update or add the permission.
-		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelId)
+		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelID)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

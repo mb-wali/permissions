@@ -3,6 +3,7 @@ package resource_types
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -33,6 +34,7 @@ func deleteResourceTypeByNameNotFound(reason string) middleware.Responder {
 	)
 }
 
+// BuildDeleteResourceTypeByNameHandler builds the request handler for the resource type by name endpoint.
 func BuildDeleteResourceTypeByNameHandler(
 	db *sql.DB,
 ) func(resource_types.DeleteResourceTypeByNameParams) middleware.Responder {

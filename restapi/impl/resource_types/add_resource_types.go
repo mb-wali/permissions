@@ -3,12 +3,14 @@ package resource_types
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildResourceTypesPostHandler builds the request handler for the add resource types endpoint.
 func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceTypesParams) middleware.Responder {
 
 	// Return the handler function.

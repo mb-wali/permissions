@@ -15,7 +15,6 @@ import (
 	httpkit "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
 	swag "github.com/go-openapi/swag"
-	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
@@ -32,11 +31,15 @@ import (
 	resources_impl "github.com/cyverse-de/permissions/restapi/impl/resources"
 	status_impl "github.com/cyverse-de/permissions/restapi/impl/status"
 	subjects_impl "github.com/cyverse-de/permissions/restapi/impl/subjects"
+
+	// The blank import for the database driver appears in this package because it's the highest level package for
+	// this service that isn't automatically generated.
+	_ "github.com/lib/pq"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-// The default permissions configuration.
+// DefaultConfig contains the default permissions configuration.
 const DefaultConfig = `
 db:
   uri: "postgresql://de:notprod@dedb:5432/permissions?sslmode=disable"
@@ -74,7 +77,7 @@ func validateOptions() error {
 
 // The database connection.
 var db *sql.DB
-var grouperClient *grouper.GrouperClient
+var grouperClient *grouper.Client
 
 // Initialize the service.
 func initService() error {
@@ -184,7 +187,7 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	)
 
 	api.SubjectsDeleteSubjectByExternalIDHandler = subjects.DeleteSubjectByExternalIDHandlerFunc(
-		subjects_impl.BuildDeleteSubjectByExternalIdHandler(db),
+		subjects_impl.BuildDeleteSubjectByExternalIDHandler(db),
 	)
 
 	api.SubjectsListSubjectsHandler = subjects.ListSubjectsHandlerFunc(

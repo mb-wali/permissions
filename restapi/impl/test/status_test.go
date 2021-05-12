@@ -2,14 +2,15 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/cyverse-de/permissions/restapi/operations/status"
 	"reflect"
 	"testing"
+
+	"github.com/cyverse-de/permissions/restapi/operations/status"
 
 	impl "github.com/cyverse-de/permissions/restapi/impl/status"
 )
 
-var testJson = json.RawMessage([]byte(`{
+var testJSON = json.RawMessage([]byte(`{
     "info": {
         "description": "The Description",
         "title":       "The Title",
@@ -18,7 +19,7 @@ var testJson = json.RawMessage([]byte(`{
 }`))
 
 func TestGetStatus(t *testing.T) {
-	f := impl.BuildStatusHandler(testJson)
+	f := impl.BuildStatusHandler(testJSON)
 	r := f(status.NewGetParams())
 
 	// Verify that we got the expected return value.

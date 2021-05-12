@@ -9,47 +9,53 @@ import (
 	"github.com/lib/pq"
 )
 
+// GroupInfo represents information about a group in Grouper.
 type GroupInfo struct {
 	ID   string
 	Name string
 }
 
+// Grouper is the interface implemented by a Grouper client instance.
 type Grouper interface {
 	GroupsForSubject(string) ([]*GroupInfo, error)
 	AddSourceIDToPermissions([]*models.Permission) error
 	AddSourceIDToPermission(*models.Permission) error
 }
 
+// Client represents a Grouper client instance.
+//
 // Note: the grouper client is intended to be a read-only client. Explicit transactions are not
 // used here for that reason.
-type GrouperClient struct {
+type Client struct {
 	db     *sql.DB
 	prefix string
 }
 
-func NewGrouperClient(dburi, prefix string) (*GrouperClient, error) {
+// NewGrouperClient creates and returns a new Grouper client for the given database URI and group name prefix.
+func NewGrouperClient(dbURI, prefix string) (*Client, error) {
 	connector, err := dbutil.NewDefaultConnector("1m")
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := connector.Connect("postgres", dburi)
+	db, err := connector.Connect("postgres", dbURI)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GrouperClient{
+	return &Client{
 		db:     db,
 		prefix: prefix,
 	}, nil
 }
 
-func (gc *GrouperClient) GroupsForSubject(subjectId string) ([]*GroupInfo, error) {
+// GroupsForSubject returns the list of groups that the subject with the given ID belongs to.
+func (gc *Client) GroupsForSubject(subjectID string) ([]*GroupInfo, error) {
 
 	// Query the database.
 	query := `SELECT group_id, group_name FROM grouper_memberships_v
             WHERE subject_id = $1 AND group_name LIKE $2 AND list_name = 'members'`
-	rows, err := gc.db.Query(query, subjectId, gc.prefix+"%")
+	rows, err := gc.db.Query(query, subjectID, gc.prefix+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +73,8 @@ func (gc *GrouperClient) GroupsForSubject(subjectId string) ([]*GroupInfo, error
 	return groups, nil
 }
 
-func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permission) error {
+// AddSourceIDToPermissions adds the subject source IDs to a slice of Permission objects.
+func (gc *Client) AddSourceIDToPermissions(permissions []*models.Permission) error {
 
 	// Get a list of subject identifiers.
 	subjectIDs := make([]string, 0)
@@ -104,6 +111,7 @@ func (gc *GrouperClient) AddSourceIDToPermissions(permissions []*models.Permissi
 	return nil
 }
 
-func (gc *GrouperClient) AddSourceIDToPermission(permission *models.Permission) error {
+// AddSourceIDToPermission adds the subject source ID to a permission object.
+func (gc *Client) AddSourceIDToPermission(permission *models.Permission) error {
 	return gc.AddSourceIDToPermissions([]*models.Permission{permission})
 }

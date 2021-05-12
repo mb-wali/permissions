@@ -3,26 +3,29 @@ package status
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/status"
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Info represents the service information retrieved from the Swagger specification.
 type Info struct {
 	Description string `json:"description"`
 	Title       string `json:"title"`
 	Version     string `json:"version"`
 }
 
+// SwaggerSpec represents just the service imformation portion of the Swagger specification.
 type SwaggerSpec struct {
 	Info Info `json:"info"`
 }
 
-func serviceInfo(swaggerJson json.RawMessage) (*models.ServiceInfo, error) {
+func serviceInfo(swaggerJSON json.RawMessage) (*models.ServiceInfo, error) {
 	var decoded SwaggerSpec
 
 	// Extract the service info from the Swagger JSON.
-	if err := json.Unmarshal(swaggerJson, &decoded); err != nil {
+	if err := json.Unmarshal(swaggerJSON, &decoded); err != nil {
 		return nil, fmt.Errorf("unable to decode the Swagger JSON: %s", err)
 	}
 
@@ -35,10 +38,11 @@ func serviceInfo(swaggerJson json.RawMessage) (*models.ServiceInfo, error) {
 	}, nil
 }
 
-func BuildStatusHandler(swaggerJson json.RawMessage) func(status.GetParams) middleware.Responder {
+// BuildStatusHandler builds the request handler for the service status endpoint.
+func BuildStatusHandler(swaggerJSON json.RawMessage) func(status.GetParams) middleware.Responder {
 
 	// Load the service info. Failure to do so will cause the service to abort.
-	info, err := serviceInfo(swaggerJson)
+	info, err := serviceInfo(swaggerJSON)
 	if err != nil {
 		panic(err)
 	}

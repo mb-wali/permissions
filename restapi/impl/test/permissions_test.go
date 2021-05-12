@@ -53,7 +53,7 @@ func grantPermission(
 }
 
 func revokePermissionAttempt(
-	db *sql.DB, subjectType, subjectId, resourceType, resourceName string,
+	db *sql.DB, subjectType, subjectID, resourceType, resourceName string,
 ) middleware.Responder {
 
 	// Build the request handler.
@@ -62,20 +62,20 @@ func revokePermissionAttempt(
 	// Attempt to revoke the permission.
 	params := permissions.RevokePermissionParams{
 		SubjectType:  subjectType,
-		SubjectID:    subjectId,
+		SubjectID:    subjectID,
 		ResourceType: resourceType,
 		ResourceName: resourceName,
 	}
 	return handler(params)
 }
 
-func revokePermission(db *sql.DB, subjectType, subjectId, resourceType, resourceName string) {
-	responder := revokePermissionAttempt(db, subjectType, subjectId, resourceType, resourceName)
+func revokePermission(db *sql.DB, subjectType, subjectID, resourceType, resourceName string) {
+	responder := revokePermissionAttempt(db, subjectType, subjectID, resourceType, resourceName)
 	_ = responder.(*permissions.RevokePermissionOK)
 }
 
 func putPermissionAttempt(
-	db *sql.DB, subjectType, subjectId, resourceType, resourceName, level string,
+	db *sql.DB, subjectType, subjectID, resourceType, resourceName, level string,
 ) middleware.Responder {
 
 	// Build the request handler.
@@ -86,7 +86,7 @@ func putPermissionAttempt(
 	permissionLevel := models.PermissionLevel(level)
 	params := permissions.PutPermissionParams{
 		SubjectType:  subjectType,
-		SubjectID:    subjectId,
+		SubjectID:    subjectID,
 		ResourceType: resourceType,
 		ResourceName: resourceName,
 		Permission:   &models.PermissionPutRequest{PermissionLevel: &permissionLevel},
@@ -94,8 +94,8 @@ func putPermissionAttempt(
 	return handler(params)
 }
 
-func putPermission(db *sql.DB, subjectType, subjectId, resourceType, resourceName, level string) *models.Permission {
-	responder := putPermissionAttempt(db, subjectType, subjectId, resourceType, resourceName, level)
+func putPermission(db *sql.DB, subjectType, subjectID, resourceType, resourceName, level string) *models.Permission {
+	responder := putPermissionAttempt(db, subjectType, subjectID, resourceType, resourceName, level)
 	return responder.(*permissions.PutPermissionOK).Payload
 }
 
@@ -133,7 +133,7 @@ func listResourcePermissions(db *sql.DB, resourceType, resourceName string) *mod
 	return responder.(*permissions.ListResourcePermissionsOK).Payload
 }
 
-func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectId string) middleware.Responder {
+func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectID string) middleware.Responder {
 
 	// Build the request handler.
 	handler := impl.BuildBySubjectHandler(db, grouper.Grouper(mockGrouperClient))
@@ -142,40 +142,40 @@ func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectId string) mi
 	lookup := false
 	params := permissions.BySubjectParams{
 		SubjectType: subjectType,
-		SubjectID:   subjectId,
+		SubjectID:   subjectID,
 		Lookup:      &lookup,
 		MinLevel:    nil,
 	}
 	return handler(params)
 }
 
-func listSubjectPermissions(db *sql.DB, subjectType, subjectId string) *models.PermissionList {
-	responder := listSubjectPermissionsAttempt(db, subjectType, subjectId)
+func listSubjectPermissions(db *sql.DB, subjectType, subjectID string) *models.PermissionList {
+	responder := listSubjectPermissionsAttempt(db, subjectType, subjectID)
 	return responder.(*permissions.BySubjectOK).Payload
 }
 
-func copyPermissionsAttempt(db *sql.DB, sourceType, sourceId, destType, destId string) middleware.Responder {
+func copyPermissionsAttempt(db *sql.DB, sourceType, sourceID, destType, destID string) middleware.Responder {
 
 	// Build the request handler.
 	handler := impl.BuildCopyPermissionsHandler(db)
 
 	// Attempt to copy the permissions.
 	destinationSubjectType := models.SubjectType(destType)
-	destinationSubjectID := models.ExternalSubjectID(destId)
+	destinationSubjectID := models.ExternalSubjectID(destID)
 	dest := models.SubjectIn{
 		SubjectType: &destinationSubjectType,
 		SubjectID:   &destinationSubjectID,
 	}
 	params := permissions.CopyPermissionsParams{
 		SubjectType:  sourceType,
-		SubjectID:    sourceId,
+		SubjectID:    sourceID,
 		DestSubjects: &models.SubjectsIn{Subjects: []*models.SubjectIn{&dest}},
 	}
 	return handler(params)
 }
 
-func copyPermissions(db *sql.DB, sourceType, sourceId, destType, destId string) middleware.Responder {
-	responder := copyPermissionsAttempt(db, sourceType, sourceId, destType, destId)
+func copyPermissions(db *sql.DB, sourceType, sourceID, destType, destID string) middleware.Responder {
+	responder := copyPermissionsAttempt(db, sourceType, sourceID, destType, destID)
 	return responder.(*permissions.CopyPermissionsOK)
 }
 
@@ -197,7 +197,7 @@ func addDefaultPermissions(db *sql.DB) {
 }
 
 func TestGrantPermission(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -244,7 +244,7 @@ func TestGrantPermission(t *testing.T) {
 }
 
 func TestListPermissions(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -298,7 +298,7 @@ func TestListPermissions(t *testing.T) {
 }
 
 func TestAutoInsertSubject(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -351,7 +351,7 @@ func TestAutoInsertSubject(t *testing.T) {
 }
 
 func TestAutoInsertResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -404,7 +404,7 @@ func TestAutoInsertResource(t *testing.T) {
 }
 
 func TestUpdatePermissionLevel(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -461,7 +461,7 @@ func TestUpdatePermissionLevel(t *testing.T) {
 }
 
 func TestRevokePermission(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -483,7 +483,7 @@ func TestRevokePermission(t *testing.T) {
 }
 
 func TestRevokePermissionResourceTypeNotFound(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -503,7 +503,7 @@ func TestRevokePermissionResourceTypeNotFound(t *testing.T) {
 }
 
 func TestRevokePermissionResourceNotFound(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -523,7 +523,7 @@ func TestRevokePermissionResourceNotFound(t *testing.T) {
 }
 
 func TestRevokePermissionUserNotFound(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -547,7 +547,7 @@ func TestRevokePermissionUserNotFound(t *testing.T) {
 }
 
 func TestRevokePermissionNotFound(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -575,7 +575,7 @@ func TestRevokePermissionNotFound(t *testing.T) {
 }
 
 func TestPutPermission(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -622,7 +622,7 @@ func TestPutPermission(t *testing.T) {
 }
 
 func TestPutPermissionNewSubject(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -668,7 +668,7 @@ func TestPutPermissionNewSubject(t *testing.T) {
 }
 
 func TestPutPermissionNewResource(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -714,7 +714,7 @@ func TestPutPermissionNewResource(t *testing.T) {
 }
 
 func TestPutPermissionDuplicateSubjectId(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -738,7 +738,7 @@ func TestPutPermissionDuplicateSubjectId(t *testing.T) {
 }
 
 func TestPutPermissionBogusResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -758,7 +758,7 @@ func TestPutPermissionBogusResourceType(t *testing.T) {
 }
 
 func TestListResourcePermissionsEmpty(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -774,7 +774,7 @@ func TestListResourcePermissionsEmpty(t *testing.T) {
 }
 
 func TestListResourcePermissions(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -799,7 +799,7 @@ func TestListResourcePermissions(t *testing.T) {
 }
 
 func TestCopyPermissions(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -827,7 +827,7 @@ func TestCopyPermissions(t *testing.T) {
 }
 
 func TestCopyPermissionsOverwrite(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -858,7 +858,7 @@ func TestCopyPermissionsOverwrite(t *testing.T) {
 }
 
 func TestCopyPermissionsRetain(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 

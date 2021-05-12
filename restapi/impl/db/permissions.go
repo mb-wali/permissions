@@ -12,7 +12,7 @@ func rowsToPermissionList(rows *sql.Rows) ([]*models.Permission, error) {
 	// Build the list of permissions.
 	permissions := make([]*models.Permission, 0)
 	for rows.Next() {
-		var dto PermissionDto
+		var dto PermissionDTO
 		err := rows.Scan(
 			&dto.ID, &dto.InternalSubjectID, &dto.SubjectID, &dto.SubjectType, &dto.ResourceID,
 			&dto.ResourceName, &dto.ResourceType, &dto.PermissionLevel,
@@ -26,6 +26,7 @@ func rowsToPermissionList(rows *sql.Rows) ([]*models.Permission, error) {
 	return permissions, nil
 }
 
+// ListPermissions lists all existing permissions.
 func ListPermissions(tx *sql.Tx) ([]*models.Permission, error) {
 
 	// Query the database.
@@ -52,6 +53,7 @@ func ListPermissions(tx *sql.Tx) ([]*models.Permission, error) {
 	return rowsToPermissionList(rows)
 }
 
+// ListResourcePermissions lists permissions associated with a specific resource.
 func ListResourcePermissions(tx *sql.Tx, resourceTypeName, resourceName string) ([]*models.Permission, error) {
 
 	// Query the database.
@@ -79,6 +81,7 @@ func ListResourcePermissions(tx *sql.Tx, resourceTypeName, resourceName string) 
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjects lists permissions granted to zero or more subjects.
 func PermissionsForSubjects(tx *sql.Tx, subjectIds []string) ([]*models.Permission, error) {
 	sa := StringArray(subjectIds)
 
@@ -109,6 +112,7 @@ func PermissionsForSubjects(tx *sql.Tx, subjectIds []string) ([]*models.Permissi
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjectsMinLevel lists permissions of at least the given level granted to zero or more subjects.
 func PermissionsForSubjectsMinLevel(tx *sql.Tx, subjectIds []string, minLevel string) ([]*models.Permission, error) {
 	sa := StringArray(subjectIds)
 
@@ -140,6 +144,8 @@ func PermissionsForSubjectsMinLevel(tx *sql.Tx, subjectIds []string, minLevel st
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjectsAndResourceType lists permissions that have been granted to zero or more subjects for the
+// specified type of resource.
 func PermissionsForSubjectsAndResourceType(
 	tx *sql.Tx, subjectIds []string, resourceTypeName string,
 ) ([]*models.Permission, error) {
@@ -173,6 +179,8 @@ func PermissionsForSubjectsAndResourceType(
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjectsAndResourceTypeMinLevel lists permissions of at least the minimum level that have been
+// granted to zero or more subjects for the specified type of resource.
 func PermissionsForSubjectsAndResourceTypeMinLevel(
 	tx *sql.Tx, subjectIds []string, resourceTypeName, minLevel string,
 ) ([]*models.Permission, error) {
@@ -207,6 +215,7 @@ func PermissionsForSubjectsAndResourceTypeMinLevel(
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjectsAndResource lists permissions granted to zero or more subjects for a specific resource.
 func PermissionsForSubjectsAndResource(
 	tx *sql.Tx, subjectIds []string, resourceTypeName, resourceName string,
 ) ([]*models.Permission, error) {
@@ -241,6 +250,8 @@ func PermissionsForSubjectsAndResource(
 	return rowsToPermissionList(rows)
 }
 
+// PermissionsForSubjectsAndResourceMinLevel lists permissions of at least the minimum level that have been granted
+// to zero or more subjects for a specific resource.
 func PermissionsForSubjectsAndResourceMinLevel(
 	tx *sql.Tx, subjectIds []string, resourceTypeName, resourceName, minLevel string,
 ) ([]*models.Permission, error) {
@@ -276,7 +287,8 @@ func PermissionsForSubjectsAndResourceMinLevel(
 	return rowsToPermissionList(rows)
 }
 
-func GetPermissionById(tx *sql.Tx, permissionId string) (*models.Permission, error) {
+// GetPermissionByID obtains information about a specific permission.
+func GetPermissionByID(tx *sql.Tx, permissionID string) (*models.Permission, error) {
 
 	// Query the database.
 	query := `SELECT p.id AS id,
@@ -293,7 +305,7 @@ func GetPermissionById(tx *sql.Tx, permissionId string) (*models.Permission, err
 	          JOIN resources r ON p.resource_id = r.id
 	          JOIN resource_types rt ON r.resource_type_id = rt.id
 	          WHERE p.id = $1`
-	rows, err := tx.Query(query, &permissionId)
+	rows, err := tx.Query(query, &permissionID)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +319,7 @@ func GetPermissionById(tx *sql.Tx, permissionId string) (*models.Permission, err
 
 	// Check for duplicates. This shouldn't happen because of the primary key constraint.
 	if len(permissions) > 1 {
-		return nil, fmt.Errorf("multiple permissions found for ID: %s", permissionId)
+		return nil, fmt.Errorf("multiple permissions found for ID: %s", permissionID)
 	}
 
 	// Return the result.
@@ -317,7 +329,8 @@ func GetPermissionById(tx *sql.Tx, permissionId string) (*models.Permission, err
 	return permissions[0], nil
 }
 
-func GetPermissionLevelIdByName(tx *sql.Tx, level models.PermissionLevel) (*string, error) {
+// GetPermissionLevelIDByName returns the identifier for the permission level with the given name.
+func GetPermissionLevelIDByName(tx *sql.Tx, level models.PermissionLevel) (*string, error) {
 
 	// Query the database.
 	query := "SELECT id FROM permission_levels WHERE name = $1"
@@ -350,11 +363,12 @@ func GetPermissionLevelIdByName(tx *sql.Tx, level models.PermissionLevel) (*stri
 	return ids[0], nil
 }
 
+// UpsertPermission updates a permission or inserts it if it doesn't exist.
 func UpsertPermission(
 	tx *sql.Tx,
-	subjectId models.InternalSubjectID,
-	resourceId string,
-	permissionLevelId string,
+	subjectID models.InternalSubjectID,
+	resourceID string,
+	permissionLevelID string,
 ) (*models.Permission, error) {
 
 	// Update the database.
@@ -362,28 +376,29 @@ func UpsertPermission(
 	         ON CONFLICT (subject_id, resource_id) DO UPDATE
 	         SET permission_level_id = EXCLUDED.permission_level_id
 	         RETURNING id`
-	row := tx.QueryRow(stmt, string(subjectId), resourceId, permissionLevelId)
+	row := tx.QueryRow(stmt, string(subjectID), resourceID, permissionLevelID)
 
 	// Extract the permission ID.
-	var permissionId string
-	if err := row.Scan(&permissionId); err != nil {
+	var permissionID string
+	if err := row.Scan(&permissionID); err != nil {
 		return nil, err
 	}
 
 	// Look up the permission.
-	permission, err := GetPermissionById(tx, permissionId)
+	permission, err := GetPermissionByID(tx, permissionID)
 	if err != nil {
 		return nil, err
 	} else if permission == nil {
-		return nil, fmt.Errorf("unable to look up permission after upsert: %s", permissionId)
+		return nil, fmt.Errorf("unable to look up permission after upsert: %s", permissionID)
 	}
 	return permission, nil
 }
 
+// GetPermission gets a subject's permission to a specific resource if it exists.
 func GetPermission(
 	tx *sql.Tx,
-	subjectId models.InternalSubjectID,
-	resourceId string,
+	subjectID models.InternalSubjectID,
+	resourceID string,
 ) (*models.Permission, error) {
 
 	// Query the database.
@@ -402,7 +417,7 @@ func GetPermission(
 	          JOIN resource_types rt ON r.resource_type_id = rt.id
 	          WHERE p.subject_id = $1
 	          AND p.resource_id = $2`
-	rows, err := tx.Query(query, string(subjectId), resourceId)
+	rows, err := tx.Query(query, string(subjectID), resourceID)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +431,7 @@ func GetPermission(
 
 	// Check for duplicates. This shouldn't happen because of the uniqueness constraint.
 	if len(permissions) > 1 {
-		return nil, fmt.Errorf("multiple permissions found for subject/resource: %s/%s", subjectId, resourceId)
+		return nil, fmt.Errorf("multiple permissions found for subject/resource: %s/%s", subjectID, resourceID)
 	}
 
 	// Return the result.
@@ -426,6 +441,7 @@ func GetPermission(
 	return permissions[0], nil
 }
 
+// DeletePermission removes a permission from the database.
 func DeletePermission(tx *sql.Tx, id models.PermissionID) error {
 
 	// Update the database.
@@ -450,6 +466,7 @@ func DeletePermission(tx *sql.Tx, id models.PermissionID) error {
 	return nil
 }
 
+// CopyPermissions copies permissions from one subject to another.
 func CopyPermissions(tx *sql.Tx, source, dest *models.SubjectOut) error {
 
 	// Copy or update permissions.

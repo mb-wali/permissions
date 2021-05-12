@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildUpdateSubjectHandler builds the request handler for the update subject endpoint.
 func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) middleware.Responder {
 
 	// Return the handler function.

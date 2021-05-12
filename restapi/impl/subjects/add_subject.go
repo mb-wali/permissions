@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// BuildAddSubjectHandler builds the request handler for the add subject endpoint.
 func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middleware.Responder {
 
 	// Return the handler function.
@@ -29,7 +30,7 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 		}
 
 		// Make sure that a subject with the same ID doesn't exist already.
-		exists, err := permsdb.SubjectIdExists(tx, *subjectIn.SubjectID)
+		exists, err := permsdb.SubjectIDExists(tx, *subjectIn.SubjectID)
 		if err != nil {
 			tx.Rollback()
 			logger.Log.Error(err)

@@ -4,13 +4,15 @@ import (
 	"github.com/cyverse-de/permissions/models"
 )
 
-type SubjectDto struct {
+// SubjectDTO is a data transfer object used for information about a subject.
+type SubjectDTO struct {
 	ID          *models.InternalSubjectID
 	SubjectID   *models.ExternalSubjectID
 	SubjectType *models.SubjectType
 }
 
-func (s *SubjectDto) ToSubjectOut() *models.SubjectOut {
+// ToSubjectOut converts a subject DTO to the output subject model.
+func (s *SubjectDTO) ToSubjectOut() *models.SubjectOut {
 	var subjectOut models.SubjectOut
 
 	subjectOut.ID = s.ID

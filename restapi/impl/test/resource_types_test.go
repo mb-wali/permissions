@@ -3,9 +3,10 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
-	"testing"
 
 	impl "github.com/cyverse-de/permissions/restapi/impl/resource_types"
 	middleware "github.com/go-openapi/runtime/middleware"
@@ -86,7 +87,7 @@ func deleteResourceTypeByName(db *sql.DB, name string) {
 }
 
 func TestAddResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -108,7 +109,7 @@ func TestAddResourceType(t *testing.T) {
 }
 
 func TestAddDuplicateResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -131,7 +132,7 @@ func TestAddDuplicateResourceType(t *testing.T) {
 }
 
 func TestGetResourceTypes(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -164,7 +165,7 @@ func TestGetResourceTypes(t *testing.T) {
 }
 
 func TestFindResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -198,7 +199,7 @@ func TestFindResourceType(t *testing.T) {
 }
 
 func TestGetResourceTypesEmpty(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -219,7 +220,7 @@ func TestGetResourceTypesEmpty(t *testing.T) {
 }
 
 func TestFindResourceTypeNotFound(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -245,7 +246,7 @@ func TestFindResourceTypeNotFound(t *testing.T) {
 }
 
 func TestModifyResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -296,7 +297,7 @@ func TestModifyResourceType(t *testing.T) {
 }
 
 func TestModifyNonExistentResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -304,18 +305,18 @@ func TestModifyNonExistentResourceType(t *testing.T) {
 	db := initdb(t)
 
 	// Attempt to modify a non-existent resource type.
-	responder := modifyResourceTypeAttempt(db, FAKE_ID, "n", "d")
+	responder := modifyResourceTypeAttempt(db, FakeID, "n", "d")
 	errorOut := responder.(*resource_types.PutResourceTypesIDNotFound).Payload
 
 	// Verify that we got the expected error message.
-	expected := fmt.Sprintf("resource type %s not found", FAKE_ID)
+	expected := fmt.Sprintf("resource type %s not found", FakeID)
 	if *errorOut.Reason != expected {
 		t.Errorf("unexpected failure reason: %s", *errorOut.Reason)
 	}
 }
 
 func TestModifyDuplicateResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -338,7 +339,7 @@ func TestModifyDuplicateResourceType(t *testing.T) {
 }
 
 func TestDeleteResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -376,7 +377,7 @@ func TestDeleteResourceType(t *testing.T) {
 }
 
 func TestDeleteResourceTypeByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -414,7 +415,7 @@ func TestDeleteResourceTypeByName(t *testing.T) {
 }
 
 func TestDeleteNonExistentResourceType(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -422,18 +423,18 @@ func TestDeleteNonExistentResourceType(t *testing.T) {
 	db := initdb(t)
 
 	// Attempt to delete a non-existent resource type.
-	responder := deleteResourceTypeAttempt(db, FAKE_ID)
+	responder := deleteResourceTypeAttempt(db, FakeID)
 	errorOut := responder.(*resource_types.DeleteResourceTypesIDNotFound).Payload
 
 	// Verify that we got the expected error message.
-	expected := fmt.Sprintf("resource type %s not found", FAKE_ID)
+	expected := fmt.Sprintf("resource type %s not found", FakeID)
 	if *errorOut.Reason != expected {
 		t.Errorf("unexpected failure reason: %s", *errorOut.Reason)
 	}
 }
 
 func TestDeleteNonExistentResourceTypeByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -452,7 +453,7 @@ func TestDeleteNonExistentResourceTypeByName(t *testing.T) {
 }
 
 func TestDeleteResourceTypeWithResources(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 
@@ -475,7 +476,7 @@ func TestDeleteResourceTypeWithResources(t *testing.T) {
 }
 
 func TestDeleteResourceTypeWithResourcesByName(t *testing.T) {
-	if !shouldrun() {
+	if !shouldRun() {
 		return
 	}
 

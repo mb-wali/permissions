@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -17,6 +18,7 @@ func internalServerError(reason string) *permissions.ListPermissionsInternalServ
 	)
 }
 
+// BuildListPermissionsHandler builds the request handler for the list permissions endpoint.
 func BuildListPermissionsHandler(
 	db *sql.DB, grouper grouper.Grouper,
 ) func(permissions.ListPermissionsParams) middleware.Responder {

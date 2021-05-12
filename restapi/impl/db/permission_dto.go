@@ -4,7 +4,8 @@ import (
 	"github.com/cyverse-de/permissions/models"
 )
 
-type PermissionDto struct {
+// PermissionDTO is a data transfer object for permissions.
+type PermissionDTO struct {
 	ID                *models.PermissionID
 	InternalSubjectID *models.InternalSubjectID
 	SubjectID         *models.ExternalSubjectID
@@ -15,7 +16,8 @@ type PermissionDto struct {
 	PermissionLevel   *models.PermissionLevel
 }
 
-func (p *PermissionDto) ToPermission() *models.Permission {
+// ToPermission converts a permission data transfer object to a permission object.
+func (p *PermissionDTO) ToPermission() *models.Permission {
 
 	// Extract the subject.
 	subject := &models.SubjectOut{
