@@ -27,8 +27,8 @@ import (
 	"github.com/cyverse-de/permissions/restapi/operations/subjects"
 
 	permissions_impl "github.com/cyverse-de/permissions/restapi/impl/permissions"
-	resource_types_impl "github.com/cyverse-de/permissions/restapi/impl/resource_types"
 	resources_impl "github.com/cyverse-de/permissions/restapi/impl/resources"
+	resource_types_impl "github.com/cyverse-de/permissions/restapi/impl/resourcetypes"
 	status_impl "github.com/cyverse-de/permissions/restapi/impl/status"
 	subjects_impl "github.com/cyverse-de/permissions/restapi/impl/subjects"
 

@@ -8,7 +8,7 @@ import (
 	"github.com/cyverse-de/permissions/models"
 	"github.com/cyverse-de/permissions/restapi/operations/resource_types"
 
-	impl "github.com/cyverse-de/permissions/restapi/impl/resource_types"
+	impl "github.com/cyverse-de/permissions/restapi/impl/resourcetypes"
 	middleware "github.com/go-openapi/runtime/middleware"
 )
 
