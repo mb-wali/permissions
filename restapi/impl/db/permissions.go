@@ -249,10 +249,10 @@ func permissionLevelPrecedenceExpression(prefix, permissionLevel string) sq.Sele
 		Suffix(")")
 }
 
-// AbbreviatedPermissionsForSubjectAndResouorceType lists permissions for a subject and resource type. If the
+// AbbreviatedPermissionsForSubjectAndResourceType lists permissions for a subject and resource type. If the
 // minLevel parameter is specified, permissions that don't meet or exceed the minimum level will be omitted
 // from the results.
-func AbbreviatedPermissionsForSubjectAndResouorceType(
+func AbbreviatedPermissionsForSubjectAndResourceType(
 	tx *sql.Tx, subjectIDs []string, resourceTypeName string, minLevel *string,
 ) ([]*models.AbbreviatedPermission, error) {
 

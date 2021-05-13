@@ -79,7 +79,7 @@ func BuildBySubjectAndResourceTypeAbbreviatedHandler(
 		}
 
 		// Perform the lookup.
-		perms, err := permsdb.AbbreviatedPermissionsForSubjectAndResouorceType(
+		perms, err := permsdb.AbbreviatedPermissionsForSubjectAndResourceType(
 			tx, subjectIDs, resourceTypeName, minLevel,
 		)
 		if err != nil {
