@@ -4,9 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/cyverse-de/permissions/models"
 )
 
+// rowsToPermissionList returns a list of permissions for the given result set. The columns in the reult set
+// must be permission ID, internal subject ID, external subject ID, subject type, resource ID, resource name,
+// resource type, and permission level, in that order.
 func rowsToPermissionList(rows *sql.Rows) ([]*models.Permission, error) {
 
 	// Build the list of permissions.
@@ -21,6 +25,26 @@ func rowsToPermissionList(rows *sql.Rows) ([]*models.Permission, error) {
 			return nil, err
 		}
 		permissions = append(permissions, dto.ToPermission())
+	}
+
+	return permissions, nil
+}
+
+// rowsToAbbreviatedPermissionList returns a list of permissions for the given result set. The columns in the
+// result set must be the permission ID, resource name, resource type, and permission level, in that order.
+func rowsToAbbreviatedPermissionList(rows *sql.Rows) ([]*models.AbbreviatedPermission, error) {
+
+	// Build the list of abbreviated permissions.
+	permissions := make([]*models.AbbreviatedPermission, 0)
+	for rows.Next() {
+		var permission models.AbbreviatedPermission
+		err := rows.Scan(
+			&permission.ID, &permission.ResourceName, &permission.ResourceType, &permission.PermissionLevel,
+		)
+		if err != nil {
+			return nil, err
+		}
+		permissions = append(permissions, &permission)
 	}
 
 	return permissions, nil
@@ -213,6 +237,63 @@ func PermissionsForSubjectsAndResourceTypeMinLevel(
 	defer rows.Close()
 
 	return rowsToPermissionList(rows)
+}
+
+// permissionLevelPrecedenceExpression returns a SelectBuilder representing a permission level precedence
+// expression that can be used in a where clause.
+func permissionLevelPrecedenceExpression(prefix, permissionLevel string) sq.SelectBuilder {
+	return psql.Select("precedence").
+		Prefix(fmt.Sprintf("%s (", prefix)).
+		From("permission_levels").
+		Where(sq.Eq{"name": permissionLevel}).
+		Suffix(")")
+}
+
+// AbbreviatedPermissionsForSubjectAndResouorceType lists permissions for a subject and resource type. If the
+// minLevel parameter is specified, permissions that don't meet or exceed the minimum level will be omitted
+// from the results.
+func AbbreviatedPermissionsForSubjectAndResouorceType(
+	tx *sql.Tx, subjectIDs []string, resourceTypeName string, minLevel *string,
+) ([]*models.AbbreviatedPermission, error) {
+
+	// Begin building the query.
+	builder := psql.Select(
+		"first_value(p.id) OVER w AS id",
+		"first_value(r.name) OVER w AS resource_name",
+		"first_value(rt.name) OVER w AS resource_type",
+		"first_value(pl.name) OVER w AS permission_level",
+	).Distinct().Options("ON (r.id)").
+		From("permissions p").
+		Join("permission_levels pl ON p.permission_level_id = pl.id").
+		Join("subjects s ON p.subject_id = s.id").
+		Join("resources r ON p.resource_id = r.id").
+		Join("resource_types rt ON r.resource_type_id = rt.id").
+		Where(sq.Eq{"rt.name": resourceTypeName}).
+		Where(sq.Eq{"s.subject_id": subjectIDs})
+
+	// Add the permission level expression if a minimum level was specified.
+	if minLevel != nil {
+		builder = builder.Where(permissionLevelPrecedenceExpression("pl.precedence <=", *minLevel))
+	}
+
+	// Add the window and the ORDER BY clause. The ORDER BY clause has to appear here because Squirrel doesn't have
+	// explicit support for the WINDOW clause.
+	builder = builder.Suffix("WINDOW w AS (PARTITION BY r.id ORDER BY pl.precedence) ORDER BY r.id")
+
+	// Generate the query.
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute the query.
+	rows, err := tx.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return rowsToAbbreviatedPermissionList(rows)
 }
 
 // PermissionsForSubjectsAndResource lists permissions granted to zero or more subjects for a specific resource.
