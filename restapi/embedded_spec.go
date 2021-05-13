@@ -105,6 +105,76 @@ func init() {
         }
       }
     },
+    "/permissions/abbreviated/subjects/{subject_type}/{subject_id}/{resource_type}": {
+      "get": {
+        "description": "Looks up all permissions granted to a subject for resources of the given type. If lookup mode is enabled and the subject is a user, the most lenient permissions granted to the subject or any groups the subject belongs to will be listed. If lookup mode is not enabled or the subject is a group then only permissions assigned directly to the subject will be listed. This endpoint will return an error status if the subject ID is in use and associated with a different subject type.",
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Look Up Abbreviated Permissions by Subject and Resource Type",
+        "operationId": "bySubjectAndResourceTypeAbbreviated",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/abbreviated_permission_list"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/bad_request"
+          },
+          "500": {
+            "$ref": "#/responses/internal_server_error"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "enum": [
+            "user",
+            "group"
+          ],
+          "type": "string",
+          "description": "The subject type name.",
+          "name": "subject_type",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "The external subject identifier.",
+          "name": "subject_id",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "The resource type name.",
+          "name": "resource_type",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "boolean",
+          "default": false,
+          "description": "True if a permission lookup should be performed. A permission lookup differs from standard permisison retrieval in two ways. First, only the most permissive permission level available to the subject is returned for any given resource. Second, if the subject happens to be a user then permissions granted to groups that the user belongs to are also included in the results. This parameter is optional and defaults to False.",
+          "name": "lookup",
+          "in": "query"
+        },
+        {
+          "enum": [
+            "read",
+            "admin",
+            "write",
+            "own"
+          ],
+          "type": "string",
+          "description": "The minimum permission level required to qualify for the result set. All permission levels qualify by default.",
+          "name": "min_level",
+          "in": "query"
+        }
+      ]
+    },
     "/permissions/resources/{resource_type}/{resource_name}": {
       "get": {
         "description": "Lists all of the permissions associated with a resource.",
@@ -998,6 +1068,50 @@ func init() {
     }
   },
   "definitions": {
+    "abbreviated_permission": {
+      "description": "Abbrevated information about permissions granted to a user.",
+      "type": "object",
+      "required": [
+        "id",
+        "resource_name",
+        "resource_type",
+        "permission_level"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/permission_id"
+        },
+        "permission_level": {
+          "$ref": "#/definitions/permission_level"
+        },
+        "resource_name": {
+          "description": "The resource name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "resource_type": {
+          "description": "The resource type name.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "abbreviated_permission_list": {
+      "description": "A list of matching permissions.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "permissions": {
+          "description": "The list of permissions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/abbreviated_permission"
+          }
+        }
+      }
+    },
     "error_out": {
       "description": "The standard format for an error response body.",
       "type": "object",
@@ -1478,6 +1592,82 @@ func init() {
         }
       }
     },
+    "/permissions/abbreviated/subjects/{subject_type}/{subject_id}/{resource_type}": {
+      "get": {
+        "description": "Looks up all permissions granted to a subject for resources of the given type. If lookup mode is enabled and the subject is a user, the most lenient permissions granted to the subject or any groups the subject belongs to will be listed. If lookup mode is not enabled or the subject is a group then only permissions assigned directly to the subject will be listed. This endpoint will return an error status if the subject ID is in use and associated with a different subject type.",
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Look Up Abbreviated Permissions by Subject and Resource Type",
+        "operationId": "bySubjectAndResourceTypeAbbreviated",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/abbreviated_permission_list"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/error_out"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/error_out"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "enum": [
+            "user",
+            "group"
+          ],
+          "type": "string",
+          "description": "The subject type name.",
+          "name": "subject_type",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "The external subject identifier.",
+          "name": "subject_id",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "The resource type name.",
+          "name": "resource_type",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "boolean",
+          "default": false,
+          "description": "True if a permission lookup should be performed. A permission lookup differs from standard permisison retrieval in two ways. First, only the most permissive permission level available to the subject is returned for any given resource. Second, if the subject happens to be a user then permissions granted to groups that the user belongs to are also included in the results. This parameter is optional and defaults to False.",
+          "name": "lookup",
+          "in": "query"
+        },
+        {
+          "enum": [
+            "read",
+            "admin",
+            "write",
+            "own"
+          ],
+          "type": "string",
+          "description": "The minimum permission level required to qualify for the result set. All permission levels qualify by default.",
+          "name": "min_level",
+          "in": "query"
+        }
+      ]
+    },
     "/permissions/resources/{resource_type}/{resource_name}": {
       "get": {
         "description": "Lists all of the permissions associated with a resource.",
@@ -2506,6 +2696,50 @@ func init() {
     }
   },
   "definitions": {
+    "abbreviated_permission": {
+      "description": "Abbrevated information about permissions granted to a user.",
+      "type": "object",
+      "required": [
+        "id",
+        "resource_name",
+        "resource_type",
+        "permission_level"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/permission_id"
+        },
+        "permission_level": {
+          "$ref": "#/definitions/permission_level"
+        },
+        "resource_name": {
+          "description": "The resource name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "resource_type": {
+          "description": "The resource type name.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "abbreviated_permission_list": {
+      "description": "A list of matching permissions.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "permissions": {
+          "description": "The list of permissions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/abbreviated_permission"
+          }
+        }
+      }
+    },
     "error_out": {
       "description": "The standard format for an error response body.",
       "type": "object",

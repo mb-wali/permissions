@@ -230,6 +230,11 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 		permissions_impl.BuildBySubjectAndResourceTypeHandler(db, grouperClient),
 	)
 
+	api.PermissionsBySubjectAndResourceTypeAbbreviatedHandler =
+		permissions.BySubjectAndResourceTypeAbbreviatedHandlerFunc(
+			permissions_impl.BuildBySubjectAndResourceTypeAbbreviatedHandler(db, grouperClient),
+		)
+
 	api.PermissionsBySubjectAndResourceHandler = permissions.BySubjectAndResourceHandlerFunc(
 		permissions_impl.BuildBySubjectAndResourceHandler(db, grouperClient),
 	)

@@ -78,6 +78,9 @@ func NewPermissionsAPI(spec *loads.Document) *PermissionsAPI {
 		PermissionsBySubjectAndResourceTypeHandler: permissions.BySubjectAndResourceTypeHandlerFunc(func(params permissions.BySubjectAndResourceTypeParams) middleware.Responder {
 			return middleware.NotImplemented("operation permissions.BySubjectAndResourceType has not yet been implemented")
 		}),
+		PermissionsBySubjectAndResourceTypeAbbreviatedHandler: permissions.BySubjectAndResourceTypeAbbreviatedHandlerFunc(func(params permissions.BySubjectAndResourceTypeAbbreviatedParams) middleware.Responder {
+			return middleware.NotImplemented("operation permissions.BySubjectAndResourceTypeAbbreviated has not yet been implemented")
+		}),
 		PermissionsCopyPermissionsHandler: permissions.CopyPermissionsHandlerFunc(func(params permissions.CopyPermissionsParams) middleware.Responder {
 			return middleware.NotImplemented("operation permissions.CopyPermissions has not yet been implemented")
 		}),
@@ -179,6 +182,8 @@ type PermissionsAPI struct {
 	PermissionsBySubjectAndResourceHandler permissions.BySubjectAndResourceHandler
 	// PermissionsBySubjectAndResourceTypeHandler sets the operation handler for the by subject and resource type operation
 	PermissionsBySubjectAndResourceTypeHandler permissions.BySubjectAndResourceTypeHandler
+	// PermissionsBySubjectAndResourceTypeAbbreviatedHandler sets the operation handler for the by subject and resource type abbreviated operation
+	PermissionsBySubjectAndResourceTypeAbbreviatedHandler permissions.BySubjectAndResourceTypeAbbreviatedHandler
 	// PermissionsCopyPermissionsHandler sets the operation handler for the copy permissions operation
 	PermissionsCopyPermissionsHandler permissions.CopyPermissionsHandler
 	// ResourcesDeleteResourceHandler sets the operation handler for the delete resource operation
@@ -315,6 +320,9 @@ func (o *PermissionsAPI) Validate() error {
 	}
 	if o.PermissionsBySubjectAndResourceTypeHandler == nil {
 		unregistered = append(unregistered, "permissions.BySubjectAndResourceTypeHandler")
+	}
+	if o.PermissionsBySubjectAndResourceTypeAbbreviatedHandler == nil {
+		unregistered = append(unregistered, "permissions.BySubjectAndResourceTypeAbbreviatedHandler")
 	}
 	if o.PermissionsCopyPermissionsHandler == nil {
 		unregistered = append(unregistered, "permissions.CopyPermissionsHandler")
@@ -489,6 +497,10 @@ func (o *PermissionsAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/permissions/subjects/{subject_type}/{subject_id}/{resource_type}"] = permissions.NewBySubjectAndResourceType(o.context, o.PermissionsBySubjectAndResourceTypeHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/permissions/abbreviated/subjects/{subject_type}/{subject_id}/{resource_type}"] = permissions.NewBySubjectAndResourceTypeAbbreviated(o.context, o.PermissionsBySubjectAndResourceTypeAbbreviatedHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
