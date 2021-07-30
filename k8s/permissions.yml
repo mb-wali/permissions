@@ -41,7 +41,7 @@ spec:
                 path: permissions.yaml
       containers:
       - name: permissions
-        image: discoenv/permissions
+        image: harbor.cyverse.org/de/permissions
         volumeMounts:
           - name: localtime
             mountPath: /etc/localtime
