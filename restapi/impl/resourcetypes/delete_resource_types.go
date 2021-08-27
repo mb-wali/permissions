@@ -12,7 +12,7 @@ import (
 
 // BuildResourceTypesIDDeleteHandler builds the request handler for the resource type deletion endpoint.
 func BuildResourceTypesIDDeleteHandler(
-	db *sql.DB,
+	db *sql.DB, schema string,
 ) func(resource_types.DeleteResourceTypesIDParams) middleware.Responder {
 
 	// Return the handler function.
@@ -20,6 +20,14 @@ func BuildResourceTypesIDDeleteHandler(
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			reason := err.Error()
+			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			reason := err.Error()
 			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(

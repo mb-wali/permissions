@@ -30,7 +30,7 @@ func deleteSubjectByExternalIDOk() middleware.Responder {
 
 // BuildDeleteSubjectByExternalIDHandler builds the request handler for the delete subject by external ID endpoint.
 func BuildDeleteSubjectByExternalIDHandler(
-	db *sql.DB,
+	db *sql.DB, schema string,
 ) func(subjects.DeleteSubjectByExternalIDParams) middleware.Responder {
 
 	// Return the handler function.
@@ -40,6 +40,12 @@ func BuildDeleteSubjectByExternalIDHandler(
 
 		// Start a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return deleteSubjectByExternalIDInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return deleteSubjectByExternalIDInternalServerError(err.Error())

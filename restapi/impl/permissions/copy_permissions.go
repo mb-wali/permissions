@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -27,7 +28,7 @@ func copyPermissionsInternalServerError(reason string) middleware.Responder {
 }
 
 // BuildCopyPermissionsHandler builds the request handler for the copy permissions endpoint.
-func BuildCopyPermissionsHandler(db *sql.DB) func(permissions.CopyPermissionsParams) middleware.Responder {
+func BuildCopyPermissionsHandler(db *sql.DB, schema string) func(permissions.CopyPermissionsParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{
 		InternalServerError: copyPermissionsInternalServerError,
@@ -42,6 +43,12 @@ func BuildCopyPermissionsHandler(db *sql.DB) func(permissions.CopyPermissionsPar
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return copyPermissionsInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return copyPermissionsInternalServerError(err.Error())

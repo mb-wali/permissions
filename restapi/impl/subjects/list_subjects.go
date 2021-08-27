@@ -2,6 +2,7 @@ package subjects
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -18,13 +19,19 @@ func listSubjectsInternalServerError(reason string) middleware.Responder {
 }
 
 // BuildListSubjectsHandler builds the request handler for the list subjects endpoint.
-func BuildListSubjectsHandler(db *sql.DB) func(subjects.ListSubjectsParams) middleware.Responder {
+func BuildListSubjectsHandler(db *sql.DB, schema string) func(subjects.ListSubjectsParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params subjects.ListSubjectsParams) middleware.Responder {
 
 		// Start a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return listSubjectsInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())

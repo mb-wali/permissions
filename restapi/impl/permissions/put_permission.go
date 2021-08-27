@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
@@ -26,7 +27,7 @@ func putPermissionBadRequest(reason string) middleware.Responder {
 
 // BuildPutPermissionHandler builds the request handler for the put permission endpoint.
 func BuildPutPermissionHandler(
-	db *sql.DB, grouperClient grouper.Grouper,
+	db *sql.DB, grouperClient grouper.Grouper, schema string,
 ) func(permissions.PutPermissionParams) middleware.Responder {
 
 	erf := &ErrorResponseFns{
@@ -40,6 +41,12 @@ func BuildPutPermissionHandler(
 
 		// Create a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return putPermissionInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())

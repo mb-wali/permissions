@@ -2,6 +2,7 @@ package resourcetypes
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/models"
 	permsdb "github.com/cyverse-de/permissions/restapi/impl/db"
@@ -10,7 +11,7 @@ import (
 )
 
 func buildResourceTypesGetResponse(
-	db *sql.DB, params resource_types.GetResourceTypesParams,
+	db *sql.DB, schema string, params resource_types.GetResourceTypesParams,
 ) (*models.ResourceTypesOut, error) {
 	resourceTypeName := params.ResourceTypeName
 
@@ -20,6 +21,11 @@ func buildResourceTypesGetResponse(
 		return nil, err
 	}
 	defer tx.Commit()
+
+	_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
+	if err != nil {
+		return nil, err
+	}
 
 	// Get the list of resource types.
 	resourceTypes, err := permsdb.ListResourceTypes(tx, resourceTypeName)
@@ -31,11 +37,11 @@ func buildResourceTypesGetResponse(
 }
 
 // BuildResourceTypesGetHandler builds the request handler for the resource type listing endpoint.
-func BuildResourceTypesGetHandler(db *sql.DB) func(resource_types.GetResourceTypesParams) middleware.Responder {
+func BuildResourceTypesGetHandler(db *sql.DB, schema string) func(resource_types.GetResourceTypesParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resource_types.GetResourceTypesParams) middleware.Responder {
-		response, err := buildResourceTypesGetResponse(db, params)
+		response, err := buildResourceTypesGetResponse(db, schema, params)
 		if err != nil {
 			reason := err.Error()
 			return resource_types.NewGetResourceTypesInternalServerError().WithPayload(

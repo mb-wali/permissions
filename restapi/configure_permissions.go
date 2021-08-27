@@ -42,7 +42,8 @@ import (
 // DefaultConfig contains the default permissions configuration.
 const DefaultConfig = `
 db:
-  uri: "postgresql://de:notprod@dedb:5432/permissions?sslmode=disable"
+  uri: "postgresql://de:notprod@dedb:5432/de?sslmode=disable"
+  schema: "permissions"
 
 grouperdb:
   uri: "postgresql://de:notprod@adedb:5432/grouper?sslmode=disable"
@@ -78,9 +79,11 @@ func validateOptions() error {
 // The database connection.
 var db *sql.DB
 var grouperClient *grouper.Client
+var schema string
 
 // Initialize the service.
 func initService() error {
+	logger.Log.Info("Initializing permissions service")
 	if options.ShowVersion {
 		version.AppVersion()
 		os.Exit(0)
@@ -105,6 +108,8 @@ func initService() error {
 		return err
 	}
 
+	schema = cfg.GetString("db.schema")
+
 	grouperDburi := cfg.GetString("grouperdb.uri")
 	grouperFolderNamePrefix := cfg.GetString("grouperdb.folder_name_prefix")
 	grouperClient, err = grouper.NewGrouperClient(grouperDburi, grouperFolderNamePrefix)
@@ -116,6 +121,7 @@ func initService() error {
 		return err
 	}
 
+	logger.Log.Info("Done initializing")
 	return nil
 }
 
@@ -143,104 +149,104 @@ func configureAPI(api *operations.PermissionsAPI) http.Handler {
 	api.StatusGetHandler = status.GetHandlerFunc(status_impl.BuildStatusHandler(SwaggerJSON))
 
 	api.ResourceTypesGetResourceTypesHandler = resource_types.GetResourceTypesHandlerFunc(
-		resource_types_impl.BuildResourceTypesGetHandler(db),
+		resource_types_impl.BuildResourceTypesGetHandler(db, schema),
 	)
 
 	api.ResourceTypesDeleteResourceTypeByNameHandler = resource_types.DeleteResourceTypeByNameHandlerFunc(
-		resource_types_impl.BuildDeleteResourceTypeByNameHandler(db),
+		resource_types_impl.BuildDeleteResourceTypeByNameHandler(db, schema),
 	)
 
 	api.ResourceTypesPostResourceTypesHandler = resource_types.PostResourceTypesHandlerFunc(
-		resource_types_impl.BuildResourceTypesPostHandler(db),
+		resource_types_impl.BuildResourceTypesPostHandler(db, schema),
 	)
 
 	api.ResourceTypesPutResourceTypesIDHandler = resource_types.PutResourceTypesIDHandlerFunc(
-		resource_types_impl.BuildResourceTypesIDPutHandler(db),
+		resource_types_impl.BuildResourceTypesIDPutHandler(db, schema),
 	)
 
 	api.ResourceTypesDeleteResourceTypesIDHandler = resource_types.DeleteResourceTypesIDHandlerFunc(
-		resource_types_impl.BuildResourceTypesIDDeleteHandler(db),
+		resource_types_impl.BuildResourceTypesIDDeleteHandler(db, schema),
 	)
 
 	api.ResourcesAddResourceHandler = resources.AddResourceHandlerFunc(
-		resources_impl.BuildAddResourceHandler(db),
+		resources_impl.BuildAddResourceHandler(db, schema),
 	)
 
 	api.ResourcesDeleteResourceByNameHandler = resources.DeleteResourceByNameHandlerFunc(
-		resources_impl.BuildDeleteResourceByNameHandler(db),
+		resources_impl.BuildDeleteResourceByNameHandler(db, schema),
 	)
 
 	api.ResourcesListResourcesHandler = resources.ListResourcesHandlerFunc(
-		resources_impl.BuildListResourcesHandler(db),
+		resources_impl.BuildListResourcesHandler(db, schema),
 	)
 
 	api.ResourcesUpdateResourceHandler = resources.UpdateResourceHandlerFunc(
-		resources_impl.BuildUpdateResourceHandler(db),
+		resources_impl.BuildUpdateResourceHandler(db, schema),
 	)
 
 	api.ResourcesDeleteResourceHandler = resources.DeleteResourceHandlerFunc(
-		resources_impl.BuildDeleteResourceHandler(db),
+		resources_impl.BuildDeleteResourceHandler(db, schema),
 	)
 
 	api.SubjectsAddSubjectHandler = subjects.AddSubjectHandlerFunc(
-		subjects_impl.BuildAddSubjectHandler(db),
+		subjects_impl.BuildAddSubjectHandler(db, schema),
 	)
 
 	api.SubjectsDeleteSubjectByExternalIDHandler = subjects.DeleteSubjectByExternalIDHandlerFunc(
-		subjects_impl.BuildDeleteSubjectByExternalIDHandler(db),
+		subjects_impl.BuildDeleteSubjectByExternalIDHandler(db, schema),
 	)
 
 	api.SubjectsListSubjectsHandler = subjects.ListSubjectsHandlerFunc(
-		subjects_impl.BuildListSubjectsHandler(db),
+		subjects_impl.BuildListSubjectsHandler(db, schema),
 	)
 
 	api.SubjectsUpdateSubjectHandler = subjects.UpdateSubjectHandlerFunc(
-		subjects_impl.BuildUpdateSubjectHandler(db),
+		subjects_impl.BuildUpdateSubjectHandler(db, schema),
 	)
 
 	api.SubjectsDeleteSubjectHandler = subjects.DeleteSubjectHandlerFunc(
-		subjects_impl.BuildDeleteSubjectHandler(db),
+		subjects_impl.BuildDeleteSubjectHandler(db, schema),
 	)
 
 	api.PermissionsListPermissionsHandler = permissions.ListPermissionsHandlerFunc(
-		permissions_impl.BuildListPermissionsHandler(db, grouperClient),
+		permissions_impl.BuildListPermissionsHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsGrantPermissionHandler = permissions.GrantPermissionHandlerFunc(
-		permissions_impl.BuildGrantPermissionHandler(db, grouperClient),
+		permissions_impl.BuildGrantPermissionHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsRevokePermissionHandler = permissions.RevokePermissionHandlerFunc(
-		permissions_impl.BuildRevokePermissionHandler(db),
+		permissions_impl.BuildRevokePermissionHandler(db, schema),
 	)
 
 	api.PermissionsPutPermissionHandler = permissions.PutPermissionHandlerFunc(
-		permissions_impl.BuildPutPermissionHandler(db, grouperClient),
+		permissions_impl.BuildPutPermissionHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsCopyPermissionsHandler = permissions.CopyPermissionsHandlerFunc(
-		permissions_impl.BuildCopyPermissionsHandler(db),
+		permissions_impl.BuildCopyPermissionsHandler(db, schema),
 	)
 
 	api.PermissionsBySubjectHandler = permissions.BySubjectHandlerFunc(
-		permissions_impl.BuildBySubjectHandler(db, grouperClient),
+		permissions_impl.BuildBySubjectHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsBySubjectAndResourceTypeHandler = permissions.BySubjectAndResourceTypeHandlerFunc(
-		permissions_impl.BuildBySubjectAndResourceTypeHandler(db, grouperClient),
+		permissions_impl.BuildBySubjectAndResourceTypeHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsBySubjectAndResourceTypeAbbreviatedHandler =
 		permissions.BySubjectAndResourceTypeAbbreviatedHandlerFunc(
-			permissions_impl.BuildBySubjectAndResourceTypeAbbreviatedHandler(db, grouperClient),
+			permissions_impl.BuildBySubjectAndResourceTypeAbbreviatedHandler(db, grouperClient, schema),
 		)
 
 	api.PermissionsBySubjectAndResourceHandler = permissions.BySubjectAndResourceHandlerFunc(
-		permissions_impl.BuildBySubjectAndResourceHandler(db, grouperClient),
+		permissions_impl.BuildBySubjectAndResourceHandler(db, grouperClient, schema),
 	)
 
 	api.PermissionsListResourcePermissionsHandler = permissions.ListResourcePermissionsHandlerFunc(
-		permissions_impl.BuildListResourcePermissionsHandler(db, grouperClient),
+		permissions_impl.BuildListResourcePermissionsHandler(db, grouperClient, schema),
 	)
 
 	api.ServerShutdown = cleanup
