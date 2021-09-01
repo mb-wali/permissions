@@ -23,12 +23,20 @@ func dburi() string {
 	return "postgres://de:notprod@dedb:5432/permissions?sslmode=disable"
 }
 
-func truncateTables(db *sql.DB) error {
+func schema() string {
+	dbschema := os.Getenv("DBSCHEMA")
+	if dbschema != "" {
+		return dbschema
+	}
+	return "permissions"
+}
+
+func truncateTables(db *sql.DB, schema string) error {
 
 	// Truncate all tables.
 	tables := []string{"permissions", "subjects", "resources", "resource_types"}
 	for _, table := range tables {
-		_, err := db.Exec(fmt.Sprintf("DELETE FROM %s", table))
+		_, err := db.Exec(fmt.Sprintf("DELETE FROM %s.%s", schema, table))
 		if err != nil {
 			return err
 		}
@@ -37,7 +45,7 @@ func truncateTables(db *sql.DB) error {
 	return nil
 }
 
-func initdb(t *testing.T) *sql.DB {
+func initdb(t *testing.T) (*sql.DB, string) {
 	db, err := sql.Open("postgres", dburi())
 	if err != nil {
 		t.Error(err)
@@ -47,9 +55,11 @@ func initdb(t *testing.T) *sql.DB {
 		t.Error(err)
 	}
 
-	if err := truncateTables(db); err != nil {
+	dbschema := schema()
+
+	if err := truncateTables(db, dbschema); err != nil {
 		t.Error(err)
 	}
 
-	return db
+	return db, dbschema
 }

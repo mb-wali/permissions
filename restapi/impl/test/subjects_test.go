@@ -24,12 +24,13 @@ func checkSubject(t *testing.T, subjects []*models.SubjectOut, i int32, subjectI
 
 func addSubjectAttempt(
 	db *sql.DB,
+	schema string,
 	subjectID models.ExternalSubjectID,
 	subjectType models.SubjectType,
 ) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildAddSubjectHandler(db)
+	handler := impl.BuildAddSubjectHandler(db, schema)
 
 	// Attempt to add the subject to the database.
 	subjectIn := &models.SubjectIn{SubjectID: &subjectID, SubjectType: &subjectType}
@@ -37,35 +38,36 @@ func addSubjectAttempt(
 	return handler(params)
 }
 
-func addSubject(db *sql.DB, subjectID models.ExternalSubjectID, subjectType models.SubjectType) *models.SubjectOut {
-	responder := addSubjectAttempt(db, subjectID, subjectType)
+func addSubject(db *sql.DB, schema string, subjectID models.ExternalSubjectID, subjectType models.SubjectType) *models.SubjectOut {
+	responder := addSubjectAttempt(db, schema, subjectID, subjectType)
 	return responder.(*subjects.AddSubjectCreated).Payload
 }
 
-func listSubjectsAttempt(db *sql.DB, subjectType, subjectID *string) middleware.Responder {
+func listSubjectsAttempt(db *sql.DB, schema string, subjectType, subjectID *string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildListSubjectsHandler(db)
+	handler := impl.BuildListSubjectsHandler(db, schema)
 
 	// Attempt to list the subjects.
 	params := subjects.ListSubjectsParams{SubjectType: subjectType, SubjectID: subjectID}
 	return handler(params)
 }
 
-func listSubjects(db *sql.DB, subjectType, subjectID *string) *models.SubjectsOut {
-	responder := listSubjectsAttempt(db, subjectType, subjectID)
+func listSubjects(db *sql.DB, schema string, subjectType, subjectID *string) *models.SubjectsOut {
+	responder := listSubjectsAttempt(db, schema, subjectType, subjectID)
 	return responder.(*subjects.ListSubjectsOK).Payload
 }
 
 func updateSubjectAttempt(
 	db *sql.DB,
+	schema string,
 	id models.InternalSubjectID,
 	subjectID models.ExternalSubjectID,
 	subjectType models.SubjectType,
 ) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildUpdateSubjectHandler(db)
+	handler := impl.BuildUpdateSubjectHandler(db, schema)
 
 	// Attempt to update the subject.
 	subjectIn := &models.SubjectIn{SubjectID: &subjectID, SubjectType: &subjectType}
@@ -75,41 +77,42 @@ func updateSubjectAttempt(
 
 func updateSubject(
 	db *sql.DB,
+	schema string,
 	id models.InternalSubjectID,
 	subjectID models.ExternalSubjectID,
 	subjectType models.SubjectType,
 ) *models.SubjectOut {
-	responder := updateSubjectAttempt(db, id, subjectID, subjectType)
+	responder := updateSubjectAttempt(db, schema, id, subjectID, subjectType)
 	return responder.(*subjects.UpdateSubjectOK).Payload
 }
 
-func deleteSubjectAttempt(db *sql.DB, id models.InternalSubjectID) middleware.Responder {
+func deleteSubjectAttempt(db *sql.DB, schema string, id models.InternalSubjectID) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildDeleteSubjectHandler(db)
+	handler := impl.BuildDeleteSubjectHandler(db, schema)
 
 	// Attempt to delete the subject.
 	params := subjects.DeleteSubjectParams{ID: string(id)}
 	return handler(params)
 }
 
-func deleteSubject(db *sql.DB, id models.InternalSubjectID) {
-	responder := deleteSubjectAttempt(db, id)
+func deleteSubject(db *sql.DB, schema string, id models.InternalSubjectID) {
+	responder := deleteSubjectAttempt(db, schema, id)
 	_ = responder.(*subjects.DeleteSubjectOK)
 }
 
-func deleteSubjectByExternalIDAttempt(db *sql.DB, subjectID, subjectType string) middleware.Responder {
+func deleteSubjectByExternalIDAttempt(db *sql.DB, schema, subjectID, subjectType string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildDeleteSubjectByExternalIDHandler(db)
+	handler := impl.BuildDeleteSubjectByExternalIDHandler(db, schema)
 
 	// Attempt to delete the subject.
 	params := subjects.DeleteSubjectByExternalIDParams{SubjectID: subjectID, SubjectType: subjectType}
 	return handler(params)
 }
 
-func deleteSubjectByExternalID(db *sql.DB, subjectID, subjectType string) {
-	responder := deleteSubjectByExternalIDAttempt(db, subjectID, subjectType)
+func deleteSubjectByExternalID(db *sql.DB, schema, subjectID, subjectType string) {
+	responder := deleteSubjectByExternalIDAttempt(db, schema, subjectID, subjectType)
 	_ = responder.(*subjects.DeleteSubjectByExternalIDOK)
 }
 
@@ -119,12 +122,12 @@ func TestAddSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
 	subjectID := models.ExternalSubjectID("nobody")
 	subjectType := models.SubjectType("user")
-	subject := addSubject(db, subjectID, subjectType)
+	subject := addSubject(db, schema, subjectID, subjectType)
 
 	// Verify that we got the expected response.
 	if *subject.SubjectID != subjectID {
@@ -141,15 +144,15 @@ func TestAddDuplicateSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
 	subjectID := models.ExternalSubjectID("nobody")
 	subjectType := models.SubjectType("user")
-	addSubject(db, subjectID, subjectType)
+	addSubject(db, schema, subjectID, subjectType)
 
 	// Attempt to add a subject with the same ID.
-	responder := addSubjectAttempt(db, subjectID, subjectType)
+	responder := addSubjectAttempt(db, schema, subjectID, subjectType)
 	errorOut := responder.(*subjects.AddSubjectBadRequest).Payload
 
 	// Verify that we got the expected result.
@@ -165,15 +168,15 @@ func TestListSubjects(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
 	subjectID := models.ExternalSubjectID("nobody")
 	subjectType := models.SubjectType("user")
-	expected := addSubject(db, subjectID, subjectType)
+	expected := addSubject(db, schema, subjectID, subjectType)
 
 	// List the subjects and verify that we get the expected number of results.
-	subjectList := listSubjects(db, nil, nil).Subjects
+	subjectList := listSubjects(db, schema, nil, nil).Subjects
 	if len(subjectList) != 1 {
 		t.Fatalf("unexpected number of subjects listed: %d", len(subjectList))
 	}
@@ -197,17 +200,17 @@ func TestListSubjectsByExternalId(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
-	expected := addSubject(db, models.ExternalSubjectID("a"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("b"), models.SubjectType("group"))
-	addSubject(db, models.ExternalSubjectID("c"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("d"), models.SubjectType("group"))
+	expected := addSubject(db, schema, models.ExternalSubjectID("a"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("b"), models.SubjectType("group"))
+	addSubject(db, schema, models.ExternalSubjectID("c"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("d"), models.SubjectType("group"))
 
 	// List the subjects and verify that we get the expected number of results.
 	subjectID := "a"
-	subjectList := listSubjects(db, nil, &subjectID).Subjects
+	subjectList := listSubjects(db, schema, nil, &subjectID).Subjects
 	if len(subjectList) != 1 {
 		t.Fatalf("unexpected number of subjects listed: %d", len(subjectList))
 	}
@@ -231,17 +234,17 @@ func TestListSubjectsByType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
-	addSubject(db, models.ExternalSubjectID("a"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("b"), models.SubjectType("group"))
-	addSubject(db, models.ExternalSubjectID("c"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("d"), models.SubjectType("group"))
+	addSubject(db, schema, models.ExternalSubjectID("a"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("b"), models.SubjectType("group"))
+	addSubject(db, schema, models.ExternalSubjectID("c"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("d"), models.SubjectType("group"))
 
 	// List the subjects and verify that we get the expected number of results.
 	subjectType := "user"
-	subjectList := listSubjects(db, &subjectType, nil).Subjects
+	subjectList := listSubjects(db, schema, &subjectType, nil).Subjects
 	if len(subjectList) != 2 {
 		t.Fatalf("unexpected number of subjects listed: %d", len(subjectList))
 	}
@@ -257,18 +260,18 @@ func TestListSubjectsByExternalIdAndType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject.
-	addSubject(db, models.ExternalSubjectID("a"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("b"), models.SubjectType("group"))
-	addSubject(db, models.ExternalSubjectID("c"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("d"), models.SubjectType("group"))
+	addSubject(db, schema, models.ExternalSubjectID("a"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("b"), models.SubjectType("group"))
+	addSubject(db, schema, models.ExternalSubjectID("c"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("d"), models.SubjectType("group"))
 
 	// List the subjects and verify that we get the expected number of results.
 	subjectID := "a"
 	subjectType := "user"
-	subjectList := listSubjects(db, &subjectType, &subjectID).Subjects
+	subjectList := listSubjects(db, schema, &subjectType, &subjectID).Subjects
 	if len(subjectList) != 1 {
 		t.Fatalf("unexpected number of subjects listed: %d", len(subjectList))
 	}
@@ -283,10 +286,10 @@ func TestListSubjectsEmpty(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// List the subjects and verify that we get the expected result.
-	subjectList := listSubjects(db, nil, nil).Subjects
+	subjectList := listSubjects(db, schema, nil, nil).Subjects
 	if subjectList == nil {
 		t.Error("nil value returned as a subject list")
 	}
@@ -301,17 +304,17 @@ func TestUpdateSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject to the database.
 	origID := models.ExternalSubjectID("s1")
 	origType := models.SubjectType("user")
-	orig := addSubject(db, origID, origType)
+	orig := addSubject(db, schema, origID, origType)
 
 	// Change the subject ID and type.
 	newID := models.ExternalSubjectID("s2")
 	newType := models.SubjectType("group")
-	new := updateSubject(db, *orig.ID, newID, newType)
+	new := updateSubject(db, schema, *orig.ID, newID, newType)
 
 	// Verify that we got the expected result.
 	if new.ID != orig.ID {
@@ -325,7 +328,7 @@ func TestUpdateSubject(t *testing.T) {
 	}
 
 	// List the subjects and verify that we get the expected number of results.
-	subjectList := listSubjects(db, nil, nil).Subjects
+	subjectList := listSubjects(db, schema, nil, nil).Subjects
 	if len(subjectList) != 1 {
 		t.Fatalf("unexpected number of results: %d", len(subjectList))
 	}
@@ -349,12 +352,12 @@ func TestUpdateSubjectNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to update a subject.
 	newID := models.ExternalSubjectID("s1")
 	newType := models.SubjectType("group")
-	responder := updateSubjectAttempt(db, FakeID, newID, newType)
+	responder := updateSubjectAttempt(db, schema, FakeID, newID, newType)
 	errorOut := responder.(*subjects.UpdateSubjectNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -370,20 +373,20 @@ func TestUpdateSubjectDuplicate(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Insert the first subject into the database.
 	s1Id := models.ExternalSubjectID("s1")
 	s1Type := models.SubjectType("user")
-	s1 := addSubject(db, s1Id, s1Type)
+	s1 := addSubject(db, schema, s1Id, s1Type)
 
 	// Insert the second subject into the database.
 	s2Id := models.ExternalSubjectID("s2")
 	s2Type := models.SubjectType("group")
-	s2 := addSubject(db, s2Id, s2Type)
+	s2 := addSubject(db, schema, s2Id, s2Type)
 
 	// Attempt to change the ID of the second subject to be the same as the first.
-	responder := updateSubjectAttempt(db, *s2.ID, *s1.SubjectID, *s2.SubjectType)
+	responder := updateSubjectAttempt(db, schema, *s2.ID, *s1.SubjectID, *s2.SubjectType)
 	errorOut := responder.(*subjects.UpdateSubjectBadRequest).Payload
 
 	// Verify that we got the expected error message.
@@ -399,18 +402,18 @@ func TestDeleteSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Insert a subject into the database.
 	s1Id := models.ExternalSubjectID("s1")
 	s1Type := models.SubjectType("user")
-	s1 := addSubject(db, s1Id, s1Type)
+	s1 := addSubject(db, schema, s1Id, s1Type)
 
 	// Delete the subject.
-	deleteSubject(db, *s1.ID)
+	deleteSubject(db, schema, *s1.ID)
 
 	// Verify that the subject was deleted.
-	subjectList := listSubjects(db, nil, nil).Subjects
+	subjectList := listSubjects(db, schema, nil, nil).Subjects
 	if len(subjectList) != 0 {
 		t.Fatalf("unexpected number of results: %d", len(subjectList))
 	}
@@ -422,10 +425,10 @@ func TestDeleteSubjectNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to delete a non-existent subject.
-	responder := deleteSubjectAttempt(db, models.InternalSubjectID(FakeID))
+	responder := deleteSubjectAttempt(db, schema, models.InternalSubjectID(FakeID))
 	errorOut := responder.(*subjects.DeleteSubjectNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -441,17 +444,17 @@ func TestDeleteSubjectByName(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a subject to the database.
-	addSubject(db, models.ExternalSubjectID("a"), models.SubjectType("user"))
-	addSubject(db, models.ExternalSubjectID("b"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("a"), models.SubjectType("user"))
+	addSubject(db, schema, models.ExternalSubjectID("b"), models.SubjectType("user"))
 
 	// Delete the subject.
-	deleteSubjectByExternalID(db, "a", "user")
+	deleteSubjectByExternalID(db, schema, "a", "user")
 
 	// Verify that the subject was deleted.
-	subjectList := listSubjects(db, nil, nil).Subjects
+	subjectList := listSubjects(db, schema, nil, nil).Subjects
 	if len(subjectList) != 1 {
 		t.Fatalf("unexpected number of results: %d", len(subjectList))
 	}
@@ -466,10 +469,10 @@ func TestDeleteSubjectByNameNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to delete a subject.
-	responder := deleteSubjectByExternalIDAttempt(db, "a", "user")
+	responder := deleteSubjectByExternalIDAttempt(db, schema, "a", "user")
 	errorOut := responder.(*subjects.DeleteSubjectByExternalIDNotFound).Payload
 
 	// Verify that we got the expected error message.
