@@ -34,7 +34,7 @@ func bySubjectAndResourceTypeBadRequest(reason string) middleware.Responder {
 // BuildBySubjectAndResourceTypeHandler builds the request handler for the permissions by subject and resource type
 // endpoint.
 func BuildBySubjectAndResourceTypeHandler(
-	db *sql.DB, grouperClient grouper.Grouper,
+	db *sql.DB, grouperClient grouper.Grouper, schema string,
 ) func(permissions.BySubjectAndResourceTypeParams) middleware.Responder {
 
 	// Return the handler function.
@@ -47,6 +47,12 @@ func BuildBySubjectAndResourceTypeHandler(
 
 		// Create a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return bySubjectAndResourceTypeInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return bySubjectAndResourceTypeInternalServerError(err.Error())

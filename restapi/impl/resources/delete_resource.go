@@ -13,13 +13,22 @@ import (
 )
 
 // BuildDeleteResourceHandler builds the request handler for the delete resource endpoint.
-func BuildDeleteResourceHandler(db *sql.DB) func(resources.DeleteResourceParams) middleware.Responder {
+func BuildDeleteResourceHandler(db *sql.DB, schema string) func(resources.DeleteResourceParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resources.DeleteResourceParams) middleware.Responder {
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return resources.NewDeleteResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()

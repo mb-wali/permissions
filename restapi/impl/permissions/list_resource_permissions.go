@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/clients/grouper"
 	"github.com/cyverse-de/permissions/logger"
@@ -26,7 +27,7 @@ func listResourcePermissionsInternalServerError(reason string) middleware.Respon
 
 // BuildListResourcePermissionsHandler builds the request handler for the list resource permissions endpoint.
 func BuildListResourcePermissionsHandler(
-	db *sql.DB, grouperClient grouper.Grouper,
+	db *sql.DB, grouperClient grouper.Grouper, schema string,
 ) func(permissions.ListResourcePermissionsParams) middleware.Responder {
 
 	// Return the handler function.
@@ -36,6 +37,12 @@ func BuildListResourcePermissionsHandler(
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return listResourcePermissionsInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())

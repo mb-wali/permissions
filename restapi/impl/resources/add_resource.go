@@ -13,7 +13,7 @@ import (
 )
 
 // BuildAddResourceHandler builds the request handler for the add resource endpoint.
-func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middleware.Responder {
+func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResourceParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resources.AddResourceParams) middleware.Responder {
@@ -21,6 +21,15 @@ func BuildAddResourceHandler(db *sql.DB) func(resources.AddResourceParams) middl
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return resources.NewAddResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()

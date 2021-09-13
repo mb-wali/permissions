@@ -27,6 +27,7 @@ func checkPerm(t *testing.T, ps []*models.Permission, i int32, resource, subject
 
 func grantPermissionAttempt(
 	db *sql.DB,
+	schema string,
 	subject *models.SubjectIn,
 	resource *models.ResourceIn,
 	level models.PermissionLevel,
@@ -34,7 +35,7 @@ func grantPermissionAttempt(
 
 	// Build the request handler.
 	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
-	handler := impl.BuildGrantPermissionHandler(db, grouperClient)
+	handler := impl.BuildGrantPermissionHandler(db, grouperClient, schema)
 
 	// Attempt to add the permission.
 	req := &models.PermissionGrantRequest{Subject: subject, Resource: resource, PermissionLevel: &level}
@@ -44,20 +45,21 @@ func grantPermissionAttempt(
 
 func grantPermission(
 	db *sql.DB,
+	schema string,
 	subject *models.SubjectIn,
 	resource *models.ResourceIn,
 	level models.PermissionLevel,
 ) *models.Permission {
-	responder := grantPermissionAttempt(db, subject, resource, level)
+	responder := grantPermissionAttempt(db, schema, subject, resource, level)
 	return responder.(*permissions.GrantPermissionOK).Payload
 }
 
 func revokePermissionAttempt(
-	db *sql.DB, subjectType, subjectID, resourceType, resourceName string,
+	db *sql.DB, schema, subjectType, subjectID, resourceType, resourceName string,
 ) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildRevokePermissionHandler(db)
+	handler := impl.BuildRevokePermissionHandler(db, schema)
 
 	// Attempt to revoke the permission.
 	params := permissions.RevokePermissionParams{
@@ -69,18 +71,18 @@ func revokePermissionAttempt(
 	return handler(params)
 }
 
-func revokePermission(db *sql.DB, subjectType, subjectID, resourceType, resourceName string) {
-	responder := revokePermissionAttempt(db, subjectType, subjectID, resourceType, resourceName)
+func revokePermission(db *sql.DB, schema, subjectType, subjectID, resourceType, resourceName string) {
+	responder := revokePermissionAttempt(db, schema, subjectType, subjectID, resourceType, resourceName)
 	_ = responder.(*permissions.RevokePermissionOK)
 }
 
 func putPermissionAttempt(
-	db *sql.DB, subjectType, subjectID, resourceType, resourceName, level string,
+	db *sql.DB, schema, subjectType, subjectID, resourceType, resourceName, level string,
 ) middleware.Responder {
 
 	// Build the request handler.
 	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
-	handler := impl.BuildPutPermissionHandler(db, grouperClient)
+	handler := impl.BuildPutPermissionHandler(db, grouperClient, schema)
 
 	// Attempt to put the permission.
 	permissionLevel := models.PermissionLevel(level)
@@ -94,31 +96,31 @@ func putPermissionAttempt(
 	return handler(params)
 }
 
-func putPermission(db *sql.DB, subjectType, subjectID, resourceType, resourceName, level string) *models.Permission {
-	responder := putPermissionAttempt(db, subjectType, subjectID, resourceType, resourceName, level)
+func putPermission(db *sql.DB, schema, subjectType, subjectID, resourceType, resourceName, level string) *models.Permission {
+	responder := putPermissionAttempt(db, schema, subjectType, subjectID, resourceType, resourceName, level)
 	return responder.(*permissions.PutPermissionOK).Payload
 }
 
-func listPermissionsAttempt(db *sql.DB) middleware.Responder {
+func listPermissionsAttempt(db *sql.DB, schema string) middleware.Responder {
 
 	// Build the request handler.
 	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
-	handler := impl.BuildListPermissionsHandler(db, grouperClient)
+	handler := impl.BuildListPermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions.
 	return handler(permissions.NewListPermissionsParams())
 }
 
-func listPermissions(db *sql.DB) *models.PermissionList {
-	responder := listPermissionsAttempt(db)
+func listPermissions(db *sql.DB, schema string) *models.PermissionList {
+	responder := listPermissionsAttempt(db, schema)
 	return responder.(*permissions.ListPermissionsOK).Payload
 }
 
-func listResourcePermissionsAttempt(db *sql.DB, resourceType, resourceName string) middleware.Responder {
+func listResourcePermissionsAttempt(db *sql.DB, schema, resourceType, resourceName string) middleware.Responder {
 
 	// Build the request handler.
 	grouperClient := grouper.NewMockGrouperClient(make(map[string][]*grouper.GroupInfo))
-	handler := impl.BuildListResourcePermissionsHandler(db, grouperClient)
+	handler := impl.BuildListResourcePermissionsHandler(db, grouperClient, schema)
 
 	// Attempt to list the permissions for the resource.
 	params := permissions.ListResourcePermissionsParams{
@@ -128,15 +130,15 @@ func listResourcePermissionsAttempt(db *sql.DB, resourceType, resourceName strin
 	return handler(params)
 }
 
-func listResourcePermissions(db *sql.DB, resourceType, resourceName string) *models.PermissionList {
-	responder := listResourcePermissionsAttempt(db, resourceType, resourceName)
+func listResourcePermissions(db *sql.DB, schema, resourceType, resourceName string) *models.PermissionList {
+	responder := listResourcePermissionsAttempt(db, schema, resourceType, resourceName)
 	return responder.(*permissions.ListResourcePermissionsOK).Payload
 }
 
-func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectID string) middleware.Responder {
+func listSubjectPermissionsAttempt(db *sql.DB, schema, subjectType, subjectID string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildBySubjectHandler(db, grouper.Grouper(mockGrouperClient))
+	handler := impl.BuildBySubjectHandler(db, grouper.Grouper(mockGrouperClient), schema)
 
 	// Attempt to look up the permissions.
 	lookup := false
@@ -149,15 +151,15 @@ func listSubjectPermissionsAttempt(db *sql.DB, subjectType, subjectID string) mi
 	return handler(params)
 }
 
-func listSubjectPermissions(db *sql.DB, subjectType, subjectID string) *models.PermissionList {
-	responder := listSubjectPermissionsAttempt(db, subjectType, subjectID)
+func listSubjectPermissions(db *sql.DB, schema, subjectType, subjectID string) *models.PermissionList {
+	responder := listSubjectPermissionsAttempt(db, schema, subjectType, subjectID)
 	return responder.(*permissions.BySubjectOK).Payload
 }
 
-func copyPermissionsAttempt(db *sql.DB, sourceType, sourceID, destType, destID string) middleware.Responder {
+func copyPermissionsAttempt(db *sql.DB, schema, sourceType, sourceID, destType, destID string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildCopyPermissionsHandler(db)
+	handler := impl.BuildCopyPermissionsHandler(db, schema)
 
 	// Attempt to copy the permissions.
 	destinationSubjectType := models.SubjectType(destType)
@@ -174,26 +176,26 @@ func copyPermissionsAttempt(db *sql.DB, sourceType, sourceID, destType, destID s
 	return handler(params)
 }
 
-func copyPermissions(db *sql.DB, sourceType, sourceID, destType, destID string) middleware.Responder {
-	responder := copyPermissionsAttempt(db, sourceType, sourceID, destType, destID)
+func copyPermissions(db *sql.DB, schema, sourceType, sourceID, destType, destID string) middleware.Responder {
+	responder := copyPermissionsAttempt(db, schema, sourceType, sourceID, destType, destID)
 	return responder.(*permissions.CopyPermissionsOK)
 }
 
-func addDefaultPermissions(db *sql.DB) {
-	putPermission(db, "user", "s2", "app", "app1", "own")
-	putPermission(db, "group", "g1id", "app", "app1", "read")
-	putPermission(db, "group", "g2id", "app", "app1", "write")
-	putPermission(db, "user", "s3", "app", "app1", "read")
-	putPermission(db, "user", "s2", "app", "app2", "read")
-	putPermission(db, "group", "g1id", "app", "app2", "write")
-	putPermission(db, "group", "g2id", "app", "app3", "own")
-	putPermission(db, "user", "s2", "analysis", "analysis1", "own")
-	putPermission(db, "group", "g1id", "analysis", "analysis1", "read")
-	putPermission(db, "group", "g2id", "analysis", "analysis1", "write")
-	putPermission(db, "user", "s3", "analysis", "analysis1", "read")
-	putPermission(db, "user", "s2", "analysis", "analysis2", "read")
-	putPermission(db, "group", "g1id", "analysis", "analysis2", "write")
-	putPermission(db, "group", "g2id", "analysis", "analysis3", "own")
+func addDefaultPermissions(db *sql.DB, schema string) {
+	putPermission(db, schema, "user", "s2", "app", "app1", "own")
+	putPermission(db, schema, "group", "g1id", "app", "app1", "read")
+	putPermission(db, schema, "group", "g2id", "app", "app1", "write")
+	putPermission(db, schema, "user", "s3", "app", "app1", "read")
+	putPermission(db, schema, "user", "s2", "app", "app2", "read")
+	putPermission(db, schema, "group", "g1id", "app", "app2", "write")
+	putPermission(db, schema, "group", "g2id", "app", "app3", "own")
+	putPermission(db, schema, "user", "s2", "analysis", "analysis1", "own")
+	putPermission(db, schema, "group", "g1id", "analysis", "analysis1", "read")
+	putPermission(db, schema, "group", "g2id", "analysis", "analysis1", "write")
+	putPermission(db, schema, "user", "s3", "analysis", "analysis1", "read")
+	putPermission(db, schema, "user", "s2", "analysis", "analysis2", "read")
+	putPermission(db, schema, "group", "g1id", "analysis", "analysis2", "write")
+	putPermission(db, schema, "group", "g2id", "analysis", "analysis3", "own")
 }
 
 func TestGrantPermission(t *testing.T) {
@@ -202,19 +204,19 @@ func TestGrantPermission(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	permission := grantPermission(db, subjectIn, resourceIn, "own")
+	permission := grantPermission(db, schema, subjectIn, resourceIn, "own")
 
 	// Verify that we got the expected result.
 	if len(*permission.ID) != 36 {
@@ -249,22 +251,22 @@ func TestListPermissions(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	_ = grantPermission(db, subjectIn, resourceIn, "own")
+	_ = grantPermission(db, schema, subjectIn, resourceIn, "own")
 
 	// List the permissions and verify that we get the expected number of results.
-	permissions := listPermissions(db).Permissions
+	permissions := listPermissions(db, schema).Permissions
 	if len(permissions) != 1 {
 		t.Fatalf("unexpected number of permissions listed: %d", len(permissions))
 	}
@@ -303,21 +305,21 @@ func TestAutoInsertSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Create, but don't register, a subject.
 	subjectIn := newSubjectIn("s1", "user")
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	_ = grantPermission(db, subjectIn, resourceIn, "own")
+	_ = grantPermission(db, schema, subjectIn, resourceIn, "own")
 
 	// List the permissions and verify that we get the expected number of results.
-	permissions := listPermissions(db).Permissions
+	permissions := listPermissions(db, schema).Permissions
 	if len(permissions) != 1 {
 		t.Fatalf("unexpected number of permissions listed: %d", len(permissions))
 	}
@@ -356,21 +358,21 @@ func TestAutoInsertResource(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Create, but don't register, a subject.
 	resourceIn := newResourceIn("r1", "app")
 
 	// Grant the subject access to the resource.
-	_ = grantPermission(db, subjectIn, resourceIn, "own")
+	_ = grantPermission(db, schema, subjectIn, resourceIn, "own")
 
 	// List the permissions and verify that we get the expected number of results.
-	permissions := listPermissions(db).Permissions
+	permissions := listPermissions(db, schema).Permissions
 	if len(permissions) != 1 {
 		t.Fatalf("unexpected number of permissions listed: %d", len(permissions))
 	}
@@ -409,25 +411,25 @@ func TestUpdatePermissionLevel(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	_ = grantPermission(db, subjectIn, resourceIn, "own")
+	_ = grantPermission(db, schema, subjectIn, resourceIn, "own")
 
 	// Revise the ownership level.
-	_ = grantPermission(db, subjectIn, resourceIn, "write")
+	_ = grantPermission(db, schema, subjectIn, resourceIn, "write")
 
 	// List the permissions and verify that we get the expected number of results.
-	permissions := listPermissions(db).Permissions
+	permissions := listPermissions(db, schema).Permissions
 	if len(permissions) != 1 {
 		t.Fatalf("unexpected number of permissions listed: %d", len(permissions))
 	}
@@ -466,17 +468,17 @@ func TestRevokePermission(t *testing.T) {
 	}
 
 	// Initialize the datasbase.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Grant the subject access to the resource.
-	_ = grantPermission(db, newSubjectIn("s1", "user"), newResourceIn("r1", "app"), "own")
+	_ = grantPermission(db, schema, newSubjectIn("s1", "user"), newResourceIn("r1", "app"), "own")
 
 	// Revoke the permission.
-	revokePermission(db, "user", "s1", "app", "r1")
+	revokePermission(db, schema, "user", "s1", "app", "r1")
 
 	// List the permissions and verify that we get the expected number of results.
-	permissions := listPermissions(db).Permissions
+	permissions := listPermissions(db, schema).Permissions
 	if len(permissions) != 0 {
 		t.Errorf("unexpected number of permissions listed: %d", len(permissions))
 	}
@@ -488,11 +490,11 @@ func TestRevokePermissionResourceTypeNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Attempt to revoke a permission for a bogus resource type.
-	responder := revokePermissionAttempt(db, "user", "s1", "foo", "r1")
+	responder := revokePermissionAttempt(db, schema, "user", "s1", "foo", "r1")
 	errorOut := responder.(*permissions.RevokePermissionNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -508,11 +510,11 @@ func TestRevokePermissionResourceNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Attempt to revoke a permission for a bogus resource.
-	responder := revokePermissionAttempt(db, "user", "s1", "app", "r1")
+	responder := revokePermissionAttempt(db, schema, "user", "s1", "app", "r1")
 	errorOut := responder.(*permissions.RevokePermissionNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -528,15 +530,15 @@ func TestRevokePermissionUserNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	_ = addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	_ = addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Attempt to revoke a permission for a bogus user.
-	responder := revokePermissionAttempt(db, "user", "nobody", "app", "r1")
+	responder := revokePermissionAttempt(db, schema, "user", "nobody", "app", "r1")
 	errorOut := responder.(*permissions.RevokePermissionNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -552,19 +554,19 @@ func TestRevokePermissionNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	_ = addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	_ = addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	_ = addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	_ = addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Attempt to revoke a permission for a bogus user.
-	responder := revokePermissionAttempt(db, "user", "s1", "app", "r1")
+	responder := revokePermissionAttempt(db, schema, "user", "s1", "app", "r1")
 	errorOut := responder.(*permissions.RevokePermissionNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -580,19 +582,19 @@ func TestPutPermission(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	permission := putPermission(db, "user", "s1", "app", "r1", "own")
+	permission := putPermission(db, schema, "user", "s1", "app", "r1", "own")
 
 	// Verify that we got the expected result.
 	if len(*permission.ID) != 36 {
@@ -627,18 +629,18 @@ func TestPutPermissionNewSubject(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define, but don't register a subject.
 	subjectIn := newSubjectIn("s1", "user")
 
 	// Define a resource.
 	resourceIn := newResourceIn("r1", "app")
-	resourceOut := addResource(db, *resourceIn.Name, *resourceIn.ResourceType)
+	resourceOut := addResource(db, schema, *resourceIn.Name, *resourceIn.ResourceType)
 
 	// Grant the subject access to the resource.
-	permission := putPermission(db, "user", "s1", "app", "r1", "own")
+	permission := putPermission(db, schema, "user", "s1", "app", "r1", "own")
 
 	// Verify that we got the expected result.
 	if len(*permission.ID) != 36 {
@@ -673,18 +675,18 @@ func TestPutPermissionNewResource(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	subjectOut := addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	subjectOut := addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Define, but don't register a resource.
 	resourceIn := newResourceIn("r1", "app")
 
 	// Grant the subject access to the resource.
-	permission := putPermission(db, "user", "s1", "app", "r1", "own")
+	permission := putPermission(db, schema, "user", "s1", "app", "r1", "own")
 
 	// Verify that we got the expected result.
 	if len(*permission.ID) != 36 {
@@ -719,15 +721,15 @@ func TestPutPermissionDuplicateSubjectId(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Define a subject.
 	subjectIn := newSubjectIn("s1", "user")
-	_ = addSubject(db, *subjectIn.SubjectID, *subjectIn.SubjectType)
+	_ = addSubject(db, schema, *subjectIn.SubjectID, *subjectIn.SubjectType)
 
 	// Attempt to add a permission using a duplicate subject ID.
-	responder := putPermissionAttempt(db, "group", "s1", "app", "r1", "own")
+	responder := putPermissionAttempt(db, schema, "group", "s1", "app", "r1", "own")
 	errorOut := responder.(*permissions.PutPermissionBadRequest).Payload
 
 	// Verify that we got the expected error.
@@ -743,11 +745,11 @@ func TestPutPermissionBogusResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Attempt to add a permission using a bogus resource type.
-	responder := putPermissionAttempt(db, "user", "s1", "foo", "r1", "own")
+	responder := putPermissionAttempt(db, schema, "user", "s1", "foo", "r1", "own")
 	errorOut := responder.(*permissions.PutPermissionBadRequest).Payload
 
 	// Verify that we got the expected error.
@@ -763,11 +765,11 @@ func TestListResourcePermissionsEmpty(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// List permissions and verify that we get the expected number of results.
-	perms := listResourcePermissions(db, "app", "r1").Permissions
+	perms := listResourcePermissions(db, schema, "app", "r1").Permissions
 	if len(perms) != 0 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
@@ -779,14 +781,14 @@ func TestListResourcePermissions(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Add some permissions.
-	addDefaultPermissions(db)
+	addDefaultPermissions(db, schema)
 
 	// List permissions and verify that we get the expected number of results.
-	perms := listResourcePermissions(db, "app", "app1").Permissions
+	perms := listResourcePermissions(db, schema, "app", "app1").Permissions
 	if len(perms) != 4 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
@@ -804,17 +806,17 @@ func TestCopyPermissions(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Add some permissions.
-	addDefaultPermissions(db)
+	addDefaultPermissions(db, schema)
 
 	// Copy permissions from subject s2 to subject s1.
-	copyPermissions(db, "user", "s2", "user", "s1")
+	copyPermissions(db, schema, "user", "s2", "user", "s1")
 
 	// Verify that the permissions were copied.
-	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	perms := listSubjectPermissions(db, schema, "user", "s1").Permissions
 	if len(perms) != 4 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
@@ -832,20 +834,20 @@ func TestCopyPermissionsOverwrite(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Add some permissions.
-	addDefaultPermissions(db)
+	addDefaultPermissions(db, schema)
 
 	// Add a permission that should be overwritten.
-	putPermission(db, "user", "s1", "app", "app1", "read")
+	putPermission(db, schema, "user", "s1", "app", "app1", "read")
 
 	// Copy permissions from subject s2 to subject s1.
-	copyPermissions(db, "user", "s2", "user", "s1")
+	copyPermissions(db, schema, "user", "s2", "user", "s1")
 
 	// Verify that the permissions were copied.
-	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	perms := listSubjectPermissions(db, schema, "user", "s1").Permissions
 	if len(perms) != 4 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}
@@ -863,20 +865,20 @@ func TestCopyPermissionsRetain(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
-	addDefaultResourceTypes(db, t)
+	db, schema := initdb(t)
+	addDefaultResourceTypes(db, schema, t)
 
 	// Add some permissions.
-	addDefaultPermissions(db)
+	addDefaultPermissions(db, schema)
 
 	// Add a permission that should not be overwritten
-	putPermission(db, "user", "s1", "app", "app2", "own")
+	putPermission(db, schema, "user", "s1", "app", "app2", "own")
 
 	// Copy permissions from subject s2 to subject s1.
-	copyPermissions(db, "user", "s2", "user", "s1")
+	copyPermissions(db, schema, "user", "s2", "user", "s1")
 
 	// Verify that the permissions were copied.
-	perms := listSubjectPermissions(db, "user", "s1").Permissions
+	perms := listSubjectPermissions(db, schema, "user", "s1").Permissions
 	if len(perms) != 4 {
 		t.Fatalf("unexpected number of results: %d", len(perms))
 	}

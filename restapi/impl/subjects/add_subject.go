@@ -13,7 +13,7 @@ import (
 )
 
 // BuildAddSubjectHandler builds the request handler for the add subject endpoint.
-func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middleware.Responder {
+func BuildAddSubjectHandler(db *sql.DB, schema string) func(subjects.AddSubjectParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params subjects.AddSubjectParams) middleware.Responder {
@@ -21,6 +21,15 @@ func BuildAddSubjectHandler(db *sql.DB) func(subjects.AddSubjectParams) middlewa
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return subjects.NewAddSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()

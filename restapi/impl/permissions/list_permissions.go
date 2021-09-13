@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -20,7 +21,7 @@ func internalServerError(reason string) *permissions.ListPermissionsInternalServ
 
 // BuildListPermissionsHandler builds the request handler for the list permissions endpoint.
 func BuildListPermissionsHandler(
-	db *sql.DB, grouper grouper.Grouper,
+	db *sql.DB, grouper grouper.Grouper, schema string,
 ) func(permissions.ListPermissionsParams) middleware.Responder {
 
 	// Return the handler function.
@@ -33,6 +34,12 @@ func BuildListPermissionsHandler(
 			return internalServerError(err.Error())
 		}
 		defer tx.Commit()
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
+		if err != nil {
+			logger.Log.Error(err)
+			return internalServerError(err.Error())
+		}
 
 		// List all permissions.
 		result, err := permsdb.ListPermissions(tx)

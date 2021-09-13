@@ -29,13 +29,19 @@ func deleteResourceByNameNotFound(reason string) middleware.Responder {
 }
 
 // BuildDeleteResourceByNameHandler builds the request handler for the delete resource by name endpoint.
-func BuildDeleteResourceByNameHandler(db *sql.DB) func(resources.DeleteResourceByNameParams) middleware.Responder {
+func BuildDeleteResourceByNameHandler(db *sql.DB, schema string) func(resources.DeleteResourceByNameParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resources.DeleteResourceByNameParams) middleware.Responder {
 
 		// Start a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return deleteResourceByNameInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return deleteResourceByNameInternalServerError(err.Error())

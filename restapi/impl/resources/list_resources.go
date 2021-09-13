@@ -2,6 +2,7 @@ package resources
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cyverse-de/permissions/logger"
 	"github.com/cyverse-de/permissions/models"
@@ -12,7 +13,7 @@ import (
 )
 
 // BuildListResourcesHandler builds the request handler for the list resources endpoint.
-func BuildListResourcesHandler(db *sql.DB) func(resources.ListResourcesParams) middleware.Responder {
+func BuildListResourcesHandler(db *sql.DB, schema string) func(resources.ListResourcesParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resources.ListResourcesParams) middleware.Responder {
@@ -27,6 +28,15 @@ func BuildListResourcesHandler(db *sql.DB) func(resources.ListResourcesParams) m
 			)
 		}
 		defer tx.Commit()
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return resources.NewListResourcesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
 
 		// List all resources.
 		result, err := permsdb.ListResources(tx, params.ResourceTypeName, params.ResourceName)

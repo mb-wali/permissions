@@ -13,7 +13,7 @@ import (
 )
 
 // BuildUpdateResourceHandler builds the request handler for the update resource endpoint.
-func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams) middleware.Responder {
+func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.UpdateResourceParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resources.UpdateResourceParams) middleware.Responder {
@@ -21,6 +21,15 @@ func BuildUpdateResourceHandler(db *sql.DB) func(resources.UpdateResourceParams)
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return resources.NewUpdateResourceInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()

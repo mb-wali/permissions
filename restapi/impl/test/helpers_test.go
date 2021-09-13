@@ -2,6 +2,7 @@ package test
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/cyverse-de/permissions/models"
@@ -17,10 +18,15 @@ func addDefaultResourceType(tx *sql.Tx, name, description string, t *testing.T) 
 	}
 }
 
-func addDefaultResourceTypes(db *sql.DB, t *testing.T) {
+func addDefaultResourceTypes(db *sql.DB, schema string, t *testing.T) {
 
 	// Start a transaction.
 	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("unable to add default resource types: %s", err)
+	}
+
+	_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 	if err != nil {
 		t.Fatalf("unable to add default resource types: %s", err)
 	}
@@ -36,10 +42,15 @@ func addDefaultResourceTypes(db *sql.DB, t *testing.T) {
 	}
 }
 
-func addTestResource(db *sql.DB, name, resourceType string, t *testing.T) {
+func addTestResource(db *sql.DB, schema, name, resourceType string, t *testing.T) {
 
 	// Start a Transaction.
 	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("unable to add a resource: %s", err)
+	}
+
+	_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 	if err != nil {
 		t.Fatalf("unable to add a resource: %s", err)
 	}

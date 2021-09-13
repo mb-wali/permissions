@@ -25,13 +25,19 @@ func revokePermissionNotFound(reason string) middleware.Responder {
 }
 
 // BuildRevokePermissionHandler builds the request handler for the revoke permission endpoint.
-func BuildRevokePermissionHandler(db *sql.DB) func(permissions.RevokePermissionParams) middleware.Responder {
+func BuildRevokePermissionHandler(db *sql.DB, schema string) func(permissions.RevokePermissionParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params permissions.RevokePermissionParams) middleware.Responder {
 
 		// Create a transaction for the request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			return revokePermissionInternalServerError(err.Error())
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())

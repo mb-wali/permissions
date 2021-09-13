@@ -12,10 +12,10 @@ import (
 	middleware "github.com/go-openapi/runtime/middleware"
 )
 
-func addResourceTypeAttempt(db *sql.DB, name, description string) middleware.Responder {
+func addResourceTypeAttempt(db *sql.DB, schema, name, description string) middleware.Responder {
 
 	// build the request handler.
-	handler := impl.BuildResourceTypesPostHandler(db)
+	handler := impl.BuildResourceTypesPostHandler(db, schema)
 
 	// Attempt to add the resource type to the database.
 	resourceTypeIn := &models.ResourceTypeIn{Name: &name, Description: description}
@@ -23,15 +23,15 @@ func addResourceTypeAttempt(db *sql.DB, name, description string) middleware.Res
 	return handler(params)
 }
 
-func addResourceType(db *sql.DB, name string, description string) *models.ResourceTypeOut {
-	responder := addResourceTypeAttempt(db, name, description)
+func addResourceType(db *sql.DB, schema, name string, description string) *models.ResourceTypeOut {
+	responder := addResourceTypeAttempt(db, schema, name, description)
 	return responder.(*resource_types.PostResourceTypesCreated).Payload
 }
 
-func listResourceTypes(db *sql.DB, resourceTypeName *string) *models.ResourceTypesOut {
+func listResourceTypes(db *sql.DB, schema string, resourceTypeName *string) *models.ResourceTypesOut {
 
 	// Build the request handler.
-	handler := impl.BuildResourceTypesGetHandler(db)
+	handler := impl.BuildResourceTypesGetHandler(db, schema)
 
 	// Get the resource types from the database.
 	params := resource_types.GetResourceTypesParams{ResourceTypeName: resourceTypeName}
@@ -40,10 +40,10 @@ func listResourceTypes(db *sql.DB, resourceTypeName *string) *models.ResourceTyp
 	return responder.Payload
 }
 
-func modifyResourceTypeAttempt(db *sql.DB, id, name, description string) middleware.Responder {
+func modifyResourceTypeAttempt(db *sql.DB, schema, id, name, description string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildResourceTypesIDPutHandler(db)
+	handler := impl.BuildResourceTypesIDPutHandler(db, schema)
 
 	// Update the resource type in the database.
 	resourceTypeIn := &models.ResourceTypeIn{Name: &name, Description: description}
@@ -51,38 +51,38 @@ func modifyResourceTypeAttempt(db *sql.DB, id, name, description string) middlew
 	return handler(params)
 }
 
-func modifyResourceType(db *sql.DB, id string, name string, description string) *models.ResourceTypeOut {
-	responder := modifyResourceTypeAttempt(db, id, name, description)
+func modifyResourceType(db *sql.DB, schema, id string, name string, description string) *models.ResourceTypeOut {
+	responder := modifyResourceTypeAttempt(db, schema, id, name, description)
 	return responder.(*resource_types.PutResourceTypesIDOK).Payload
 }
 
-func deleteResourceTypeAttempt(db *sql.DB, id string) middleware.Responder {
+func deleteResourceTypeAttempt(db *sql.DB, schema, id string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildResourceTypesIDDeleteHandler(db)
+	handler := impl.BuildResourceTypesIDDeleteHandler(db, schema)
 
 	// Attempt to remove the resource type from the database.
 	params := resource_types.DeleteResourceTypesIDParams{ID: id}
 	return handler(params)
 }
 
-func deleteResourceType(db *sql.DB, id string) {
-	responder := deleteResourceTypeAttempt(db, id)
+func deleteResourceType(db *sql.DB, schema, id string) {
+	responder := deleteResourceTypeAttempt(db, schema, id)
 	_ = responder.(*resource_types.DeleteResourceTypesIDOK)
 }
 
-func deleteResourceTypeByNameAttempt(db *sql.DB, name string) middleware.Responder {
+func deleteResourceTypeByNameAttempt(db *sql.DB, schema, name string) middleware.Responder {
 
 	// Build the request handler.
-	handler := impl.BuildDeleteResourceTypeByNameHandler(db)
+	handler := impl.BuildDeleteResourceTypeByNameHandler(db, schema)
 
 	// Attempt to remove the resource type from the database.
 	params := resource_types.DeleteResourceTypeByNameParams{ResourceTypeName: name}
 	return handler(params)
 }
 
-func deleteResourceTypeByName(db *sql.DB, name string) {
-	responder := deleteResourceTypeByNameAttempt(db, name)
+func deleteResourceTypeByName(db *sql.DB, schema, name string) {
+	responder := deleteResourceTypeByNameAttempt(db, schema, name)
 	_ = responder.(*resource_types.DeleteResourceTypeByNameOK)
 }
 
@@ -92,12 +92,12 @@ func TestAddResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add the resource type.
 	name := "resource_type"
 	description := "The resource type."
-	resourceTypeOut := addResourceType(db, name, description)
+	resourceTypeOut := addResourceType(db, schema, name, description)
 
 	// Verify the name and description.
 	if *resourceTypeOut.Name != name {
@@ -114,14 +114,14 @@ func TestAddDuplicateResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a resource type.
 	name := "duplicate_resource_type"
-	addResourceType(db, name, "The original!")
+	addResourceType(db, schema, name, "The original!")
 
 	// Attempt to add another resource type with the same name.
-	responder := addResourceTypeAttempt(db, name, "The impostor!")
+	responder := addResourceTypeAttempt(db, schema, name, "The impostor!")
 	errorOut := responder.(*resource_types.PostResourceTypesBadRequest).Payload
 
 	// Verify that we got the expected error message.
@@ -137,13 +137,13 @@ func TestGetResourceTypes(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a resource type.
-	expected := addResourceType(db, "resource_type", "The resource type.")
+	expected := addResourceType(db, schema, "resource_type", "The resource type.")
 
 	// List the resource types.
-	resourceTypesOut := listResourceTypes(db, nil)
+	resourceTypesOut := listResourceTypes(db, schema, nil)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -170,14 +170,14 @@ func TestFindResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add some resource types.
-	addResourceType(db, "a", "a")
-	expected := addResourceType(db, "resource_type", "The resource type.")
+	addResourceType(db, schema, "a", "a")
+	expected := addResourceType(db, schema, "resource_type", "The resource type.")
 
 	// Search for a resource type.
-	resourceTypesOut := listResourceTypes(db, expected.Name)
+	resourceTypesOut := listResourceTypes(db, schema, expected.Name)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -204,10 +204,10 @@ func TestGetResourceTypesEmpty(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// List the resource types.
-	resourceTypesOut := listResourceTypes(db, nil)
+	resourceTypesOut := listResourceTypes(db, schema, nil)
 
 	// Verify that we got the expected result.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -225,15 +225,15 @@ func TestFindResourceTypeNotFound(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add some resource types.
-	addResourceType(db, "a", "a")
-	addResourceType(db, "b", "b")
+	addResourceType(db, schema, "a", "a")
+	addResourceType(db, schema, "b", "b")
 
 	// List the resource types.
 	search := "c"
-	resourceTypesOut := listResourceTypes(db, &search)
+	resourceTypesOut := listResourceTypes(db, schema, &search)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -251,16 +251,16 @@ func TestModifyResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Add a resource type.
-	original := addResourceType(db, "resource_type", "The resource type.")
+	original := addResourceType(db, schema, "resource_type", "The resource type.")
 	id := *original.ID
 
 	// Modify the resource type.
 	newName := "new_resource_type"
 	newDescription := "New and Improved!"
-	modified := modifyResourceType(db, id, newName, newDescription)
+	modified := modifyResourceType(db, schema, id, newName, newDescription)
 
 	// The modified resource type should have the original ID with the new name and description.
 	if *modified.ID != id {
@@ -274,7 +274,7 @@ func TestModifyResourceType(t *testing.T) {
 	}
 
 	// List the resource types.
-	resourceTypesOut := listResourceTypes(db, nil)
+	resourceTypesOut := listResourceTypes(db, schema, nil)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -302,10 +302,10 @@ func TestModifyNonExistentResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to modify a non-existent resource type.
-	responder := modifyResourceTypeAttempt(db, FakeID, "n", "d")
+	responder := modifyResourceTypeAttempt(db, schema, FakeID, "n", "d")
 	errorOut := responder.(*resource_types.PutResourceTypesIDNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -321,14 +321,14 @@ func TestModifyDuplicateResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Create two new resource types.
-	rt1 := addResourceType(db, "rt1", "rt1")
-	rt2 := addResourceType(db, "rt2", "rt2")
+	rt1 := addResourceType(db, schema, "rt1", "rt1")
+	rt2 := addResourceType(db, schema, "rt2", "rt2")
 
 	// Attempt to rename the second resource type to the name of the first resource type.
-	responder := modifyResourceTypeAttempt(db, *rt2.ID, *rt1.Name, rt2.Description)
+	responder := modifyResourceTypeAttempt(db, schema, *rt2.ID, *rt1.Name, rt2.Description)
 	errorOut := responder.(*resource_types.PutResourceTypesIDBadRequest).Payload
 
 	// Verify that we got the expected error message.
@@ -344,17 +344,17 @@ func TestDeleteResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Create two resource types.
-	rt1 := addResourceType(db, "rt1", "rt1")
-	rt2 := addResourceType(db, "rt2", "rt2")
+	rt1 := addResourceType(db, schema, "rt1", "rt1")
+	rt2 := addResourceType(db, schema, "rt2", "rt2")
 
 	// Delete the second resource type.
-	deleteResourceType(db, *rt2.ID)
+	deleteResourceType(db, schema, *rt2.ID)
 
 	// List the resource types.
-	resourceTypesOut := listResourceTypes(db, nil)
+	resourceTypesOut := listResourceTypes(db, schema, nil)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -382,17 +382,17 @@ func TestDeleteResourceTypeByName(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Create two resource types.
-	rt1 := addResourceType(db, "rt1", "rt1")
-	rt2 := addResourceType(db, "rt2", "rt2")
+	rt1 := addResourceType(db, schema, "rt1", "rt1")
+	rt2 := addResourceType(db, schema, "rt2", "rt2")
 
 	// Delete the second resource type.
-	deleteResourceTypeByName(db, *rt2.Name)
+	deleteResourceTypeByName(db, schema, *rt2.Name)
 
 	// List the resource types.
-	resourceTypesOut := listResourceTypes(db, nil)
+	resourceTypesOut := listResourceTypes(db, schema, nil)
 
 	// Verify the number of resource types in the response.
 	resourceTypes := resourceTypesOut.ResourceTypes
@@ -420,10 +420,10 @@ func TestDeleteNonExistentResourceType(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to delete a non-existent resource type.
-	responder := deleteResourceTypeAttempt(db, FakeID)
+	responder := deleteResourceTypeAttempt(db, schema, FakeID)
 	errorOut := responder.(*resource_types.DeleteResourceTypesIDNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -439,10 +439,10 @@ func TestDeleteNonExistentResourceTypeByName(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Attempt to delete a non-existent resource type.
-	responder := deleteResourceTypeByNameAttempt(db, "missing_rt")
+	responder := deleteResourceTypeByNameAttempt(db, schema, "missing_rt")
 	errorOut := responder.(*resource_types.DeleteResourceTypeByNameNotFound).Payload
 
 	// Verify that we got the expected error message.
@@ -458,14 +458,14 @@ func TestDeleteResourceTypeWithResources(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Create a resource type and a resource
-	rt := addResourceType(db, "rt", "rt")
-	addTestResource(db, "r", "rt", t)
+	rt := addResourceType(db, schema, "rt", "rt")
+	addTestResource(db, schema, "r", "rt", t)
 
 	// Attempt to delete the resource type.
-	responder := deleteResourceTypeAttempt(db, *rt.ID)
+	responder := deleteResourceTypeAttempt(db, schema, *rt.ID)
 	errorOut := responder.(*resource_types.DeleteResourceTypesIDBadRequest).Payload
 
 	// Verify that we got the expected error message.
@@ -481,14 +481,14 @@ func TestDeleteResourceTypeWithResourcesByName(t *testing.T) {
 	}
 
 	// Initialize the database.
-	db := initdb(t)
+	db, schema := initdb(t)
 
 	// Create a resource type and a resource
-	rt := addResourceType(db, "rt", "rt")
-	addTestResource(db, "r", "rt", t)
+	rt := addResourceType(db, schema, "rt", "rt")
+	addTestResource(db, schema, "r", "rt", t)
 
 	// Attempt to delete the resource type.
-	responder := deleteResourceTypeByNameAttempt(db, *rt.Name)
+	responder := deleteResourceTypeByNameAttempt(db, schema, *rt.Name)
 	errorOut := responder.(*resource_types.DeleteResourceTypeByNameBadRequest).Payload
 
 	// Verify that we got the expected error message.

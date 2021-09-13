@@ -31,7 +31,7 @@ func bySubjectAndResourceTypeAbbreviatedBadRequest(reason string) middleware.Res
 }
 
 func BuildBySubjectAndResourceTypeAbbreviatedHandler(
-	db *sql.DB, grouperClient grouper.Grouper,
+	db *sql.DB, grouperClient grouper.Grouper, schema string,
 ) func(permissions.BySubjectAndResourceTypeAbbreviatedParams) middleware.Responder {
 
 	// Return the handler function.
@@ -49,6 +49,12 @@ func BuildBySubjectAndResourceTypeAbbreviatedHandler(
 			return bySubjectAndResourceTypeAbbreviatedInternalServerError(err.Error())
 		}
 		defer tx.Rollback()
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
+		if err != nil {
+			logger.Log.Error(err)
+			return bySubjectAndResourceTypeAbbreviatedInternalServerError(err.Error())
+		}
 
 		// Verify that the subject type is correct.
 		subject, err := permsdb.GetSubjectByExternalID(tx, models.ExternalSubjectID(subjectID))

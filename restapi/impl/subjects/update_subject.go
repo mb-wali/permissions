@@ -13,7 +13,7 @@ import (
 )
 
 // BuildUpdateSubjectHandler builds the request handler for the update subject endpoint.
-func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) middleware.Responder {
+func BuildUpdateSubjectHandler(db *sql.DB, schema string) func(subjects.UpdateSubjectParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params subjects.UpdateSubjectParams) middleware.Responder {
@@ -22,6 +22,15 @@ func BuildUpdateSubjectHandler(db *sql.DB) func(subjects.UpdateSubjectParams) mi
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()

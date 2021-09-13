@@ -11,7 +11,7 @@ import (
 )
 
 // BuildResourceTypesPostHandler builds the request handler for the add resource types endpoint.
-func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceTypesParams) middleware.Responder {
+func BuildResourceTypesPostHandler(db *sql.DB, schema string) func(resource_types.PostResourceTypesParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params resource_types.PostResourceTypesParams) middleware.Responder {
@@ -19,6 +19,14 @@ func BuildResourceTypesPostHandler(db *sql.DB) func(resource_types.PostResourceT
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			reason := err.Error()
+			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			reason := err.Error()
 			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(

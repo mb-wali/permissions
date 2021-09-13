@@ -13,7 +13,7 @@ import (
 )
 
 // BuildDeleteSubjectHandler builds the request handler for the delete subject endpoint.
-func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) middleware.Responder {
+func BuildDeleteSubjectHandler(db *sql.DB, schema string) func(subjects.DeleteSubjectParams) middleware.Responder {
 
 	// Return the handler function.
 	return func(params subjects.DeleteSubjectParams) middleware.Responder {
@@ -21,6 +21,15 @@ func BuildDeleteSubjectHandler(db *sql.DB) func(subjects.DeleteSubjectParams) mi
 
 		// Start a transaction for this request.
 		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Error(err)
+			reason := err.Error()
+			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
+				&models.ErrorOut{Reason: &reason},
+			)
+		}
+
+		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {
 			logger.Log.Error(err)
 			reason := err.Error()
