@@ -27,7 +27,7 @@ func BuildListResourcesHandler(db *sql.DB, schema string) func(resources.ListRes
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
-		defer tx.Commit()
+		defer tx.Commit() // nolint:errcheck
 
 		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {

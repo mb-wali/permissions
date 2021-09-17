@@ -38,14 +38,14 @@ func BuildResourceTypesIDDeleteHandler(
 		// Verify that the resource type exists.
 		exists, err := permsdb.ResourceTypeExists(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 		if !exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource type %s not found", params.ID)
 			return resource_types.NewDeleteResourceTypesIDNotFound().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -55,14 +55,14 @@ func BuildResourceTypesIDDeleteHandler(
 		// Verify that the resource type has no resources associated with it.
 		numResources, err := permsdb.CountResourcesOfType(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 		if numResources != 0 {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource type %s has resources associated with it", params.ID)
 			return resource_types.NewDeleteResourceTypesIDBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -72,7 +72,7 @@ func BuildResourceTypesIDDeleteHandler(
 		// Delete the resource type.
 		err = permsdb.DeleteResourceType(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -81,7 +81,7 @@ func BuildResourceTypesIDDeleteHandler(
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewDeleteResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

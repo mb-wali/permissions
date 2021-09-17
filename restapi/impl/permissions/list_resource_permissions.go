@@ -51,14 +51,14 @@ func BuildListResourcePermissionsHandler(
 		// List the permissions for the resource.
 		perms, err := permsdb.ListResourcePermissions(tx, resourceTypeName, resourceName)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return listResourcePermissionsInternalServerError(err.Error())
 		}

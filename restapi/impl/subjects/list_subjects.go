@@ -40,14 +40,14 @@ func BuildListSubjectsHandler(db *sql.DB, schema string) func(subjects.ListSubje
 		// Obtain the list of subjects.
 		result, err := permsdb.ListSubjects(tx, params.SubjectType, params.SubjectID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())
 		}
 
 		// Commit the transaction for the request.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return listSubjectsInternalServerError(err.Error())
 		}

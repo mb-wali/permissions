@@ -41,7 +41,7 @@ func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResour
 		// Load the resource type.
 		resourceType, err := permsdb.GetResourceTypeByName(tx, resourceIn.ResourceType)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
@@ -58,7 +58,7 @@ func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResour
 		// Verify that another resource with the same name doesn't already exist.
 		duplicate, err := permsdb.GetResourceByName(tx, resourceIn.Name, resourceType.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
@@ -66,7 +66,7 @@ func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResour
 			)
 		}
 		if duplicate != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf(
 				"a resource named, '%s', with type, '%s', already exists", *resourceIn.Name, *resourceType.Name,
 			)
@@ -78,7 +78,7 @@ func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResour
 		// Add the resource to the database.
 		resourceOut, err := permsdb.AddResource(tx, resourceIn.Name, resourceType.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(
@@ -88,7 +88,7 @@ func BuildAddResourceHandler(db *sql.DB, schema string) func(resources.AddResour
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewAddResourceInternalServerError().WithPayload(

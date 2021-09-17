@@ -20,7 +20,7 @@ func buildResourceTypesGetResponse(
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Commit()
+	defer tx.Commit() // nolint:errcheck
 
 	_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 	if err != nil {

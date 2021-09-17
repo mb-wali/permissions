@@ -103,8 +103,7 @@ func (gc *Client) AddSourceIDToPermissions(permissions []*models.Permission) err
 
 	// Add the subject IDs to the permission objects.
 	for _, permission := range permissions {
-		var sourceID models.SubjectSourceID
-		sourceID = models.SubjectSourceID(m[string(*permission.Subject.SubjectID)])
+		var sourceID models.SubjectSourceID = models.SubjectSourceID(m[string(*permission.Subject.SubjectID)])
 		permission.Subject.SubjectSourceID = &sourceID
 	}
 

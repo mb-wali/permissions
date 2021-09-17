@@ -61,7 +61,7 @@ func BuildPutPermissionHandler(
 		}
 		subject, errorResponder := getOrAddSubject(tx, subjectIn, erf)
 		if errorResponder != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			return errorResponder
 		}
 
@@ -72,28 +72,28 @@ func BuildPutPermissionHandler(
 		}
 		resource, errorResponder := getOrAddResource(tx, resourceIn, erf)
 		if errorResponder != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			return errorResponder
 		}
 
 		// Look up the permission level.
 		permissionLevelID, errorResponder := getPermissionLevel(tx, *req.PermissionLevel, erf)
 		if errorResponder != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			return errorResponder
 		}
 
 		// Either update or add the permission.
 		permission, err := permsdb.UpsertPermission(tx, *subject.ID, *resource.ID, *permissionLevelID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return putPermissionInternalServerError(err.Error())
 		}

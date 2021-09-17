@@ -100,7 +100,7 @@ func BuildRevokePermissionHandler(db *sql.DB, schema string) func(permissions.Re
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return revokePermissionInternalServerError(err.Error())
 		}

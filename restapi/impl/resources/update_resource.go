@@ -41,7 +41,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 		// Verify that the resource exists.
 		exists, err := permsdb.ResourceExists(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
@@ -49,7 +49,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 			)
 		}
 		if !exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource, %s, not found", params.ID)
 			return resources.NewUpdateResourceNotFound().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -59,7 +59,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 		// Verify that another resource with the same name doesn't already exist.
 		duplicate, err := permsdb.GetDuplicateResourceByName(tx, &params.ID, resourceUpdate.Name)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
@@ -67,7 +67,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 			)
 		}
 		if duplicate != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("a resource of the same type named, '%s', already exists", *resourceUpdate.Name)
 			return resources.NewUpdateResourceBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -77,7 +77,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 		// Update the resource.
 		resourceOut, err := permsdb.UpdateResource(tx, &params.ID, resourceUpdate.Name)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(
@@ -87,7 +87,7 @@ func BuildUpdateResourceHandler(db *sql.DB, schema string) func(resources.Update
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewUpdateResourceInternalServerError().WithPayload(

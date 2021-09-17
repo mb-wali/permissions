@@ -59,12 +59,12 @@ func BuildBySubjectHandler(
 		// Verify that the subject type is correct.
 		subject, err := permsdb.GetSubjectByExternalID(tx, models.ExternalSubjectID(subjectID))
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
 		if subject != nil && string(*subject.SubjectType) != subjectType {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("incorrect type for subject, %s: %s", subjectID, subjectType)
 			return bySubjectBadRequest(reason)
 		}
@@ -72,7 +72,7 @@ func BuildBySubjectHandler(
 		// Get the list of subject IDs to use for the query.
 		subjectIds, err := buildSubjectIDList(grouperClient, subjectType, subjectID, lookup)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}
@@ -82,14 +82,14 @@ func BuildBySubjectHandler(
 		if minLevel == nil {
 			perms, err = permsdb.PermissionsForSubjects(tx, subjectIds)
 			if err != nil {
-				tx.Rollback()
+				tx.Rollback() // nolint:errcheck
 				logger.Log.Error(err)
 				return bySubjectInternalServerError(err.Error())
 			}
 		} else {
 			perms, err = permsdb.PermissionsForSubjectsMinLevel(tx, subjectIds, *minLevel)
 			if err != nil {
-				tx.Rollback()
+				tx.Rollback() // nolint:errcheck
 				logger.Log.Error(err)
 				return bySubjectInternalServerError(err.Error())
 			}
@@ -97,7 +97,7 @@ func BuildBySubjectHandler(
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return bySubjectInternalServerError(err.Error())
 		}

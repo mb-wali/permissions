@@ -37,14 +37,14 @@ func BuildResourceTypesIDPutHandler(db *sql.DB, schema string) func(resource_typ
 		// Verify that the resource type exists.
 		exists, err := permsdb.ResourceTypeExists(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 		if !exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource type %s not found", params.ID)
 			return resource_types.NewPutResourceTypesIDNotFound().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -54,14 +54,14 @@ func BuildResourceTypesIDPutHandler(db *sql.DB, schema string) func(resource_typ
 		// Check for a duplicate name.
 		duplicate, err := permsdb.GetDuplicateResourceTypeByName(tx, &params.ID, resourceTypeIn.Name)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 		if duplicate != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("another resource type named %s already exists", *resourceTypeIn.Name)
 			return resource_types.NewPutResourceTypesIDBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -71,7 +71,7 @@ func BuildResourceTypesIDPutHandler(db *sql.DB, schema string) func(resource_typ
 		// Update the resource type.
 		resourceTypeOut, err := permsdb.UpdateResourceType(tx, &params.ID, resourceTypeIn)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -80,7 +80,7 @@ func BuildResourceTypesIDPutHandler(db *sql.DB, schema string) func(resource_typ
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPutResourceTypesIDInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

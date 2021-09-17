@@ -236,7 +236,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatal(err.Error())
 	}
-	if deUsersSubjectID == nil {
+	if deUsersSubjectID == nil { // nolint:staticcheck
 		logger.Log.Fatal("Could not find subject ID for de-users Group ID: ", deUsersGroupID)
 	}
 
@@ -257,7 +257,7 @@ func main() {
 	}
 
 	// Run the conversion.
-	if err := runConversion(db, deDb, *deUsersSubjectID); err != nil {
+	if err := runConversion(db, deDb, *deUsersSubjectID); err != nil { // nolint:staticcheck
 		logger.Log.Fatal(err.Error())
 	}
 }

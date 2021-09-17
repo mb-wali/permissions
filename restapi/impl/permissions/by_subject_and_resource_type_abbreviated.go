@@ -48,7 +48,7 @@ func BuildBySubjectAndResourceTypeAbbreviatedHandler(
 			logger.Log.Error(err)
 			return bySubjectAndResourceTypeAbbreviatedInternalServerError(err.Error())
 		}
-		defer tx.Rollback()
+		defer tx.Rollback() // nolint:errcheck
 
 		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {

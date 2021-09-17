@@ -40,7 +40,7 @@ func BuildDeleteResourceHandler(db *sql.DB, schema string) func(resources.Delete
 		// Verify that the resource exists.
 		exists, err := permsdb.ResourceExists(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewDeleteResourceInternalServerError().WithPayload(
@@ -48,7 +48,7 @@ func BuildDeleteResourceHandler(db *sql.DB, schema string) func(resources.Delete
 			)
 		}
 		if !exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource, %s, not found", params.ID)
 			return resources.NewDeleteResourceNotFound().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -58,7 +58,7 @@ func BuildDeleteResourceHandler(db *sql.DB, schema string) func(resources.Delete
 		// Delete the resource.
 		err = permsdb.DeleteResource(tx, &params.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewDeleteResourceInternalServerError().WithPayload(
@@ -68,7 +68,7 @@ func BuildDeleteResourceHandler(db *sql.DB, schema string) func(resources.Delete
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return resources.NewDeleteResourceInternalServerError().WithPayload(

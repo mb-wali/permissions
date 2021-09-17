@@ -42,7 +42,7 @@ func BuildUpdateSubjectHandler(db *sql.DB, schema string) func(subjects.UpdateSu
 		// Verify that the subject exists.
 		exists, err := permsdb.SubjectExists(tx, id)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
@@ -59,7 +59,7 @@ func BuildUpdateSubjectHandler(db *sql.DB, schema string) func(subjects.UpdateSu
 		// Verify that a subject with the same external subject ID doesn't exist.
 		duplicateExists, err := permsdb.DuplicateSubjectExists(tx, id, *subjectIn.SubjectID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
@@ -76,7 +76,7 @@ func BuildUpdateSubjectHandler(db *sql.DB, schema string) func(subjects.UpdateSu
 		// Update the subject.
 		subjectOut, err := permsdb.UpdateSubject(tx, id, *subjectIn.SubjectID, *subjectIn.SubjectType)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewUpdateSubjectInternalServerError().WithPayload(
@@ -86,7 +86,7 @@ func BuildUpdateSubjectHandler(db *sql.DB, schema string) func(subjects.UpdateSu
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewUpdateSubjectInternalServerError().WithPayload(

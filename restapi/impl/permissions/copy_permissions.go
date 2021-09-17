@@ -57,7 +57,7 @@ func BuildCopyPermissionsHandler(db *sql.DB, schema string) func(permissions.Cop
 		// Either get or add the source subject.
 		source, errorResponse := getOrAddSubject(tx, &models.SubjectIn{SubjectType: &sourceType, SubjectID: &sourceID}, erf)
 		if errorResponse != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			return errorResponse
 		}
 
@@ -67,13 +67,13 @@ func BuildCopyPermissionsHandler(db *sql.DB, schema string) func(permissions.Cop
 			// Either get or add the subject.
 			dest, errorResponse := getOrAddSubject(tx, destIn, erf)
 			if errorResponse != nil {
-				tx.Rollback()
+				tx.Rollback() // nolint:errcheck
 				return errorResponse
 			}
 
 			// Copy the permissions.
 			if err := permsdb.CopyPermissions(tx, source, dest); err != nil {
-				tx.Rollback()
+				tx.Rollback() // nolint:errcheck
 				logger.Log.Error(err)
 				return copyPermissionsInternalServerError(err.Error())
 			}
@@ -81,7 +81,7 @@ func BuildCopyPermissionsHandler(db *sql.DB, schema string) func(permissions.Cop
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return copyPermissionsInternalServerError(err.Error())
 		}

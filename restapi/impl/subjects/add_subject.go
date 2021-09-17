@@ -41,7 +41,7 @@ func BuildAddSubjectHandler(db *sql.DB, schema string) func(subjects.AddSubjectP
 		// Make sure that a subject with the same ID doesn't exist already.
 		exists, err := permsdb.SubjectIDExists(tx, *subjectIn.SubjectID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
@@ -49,7 +49,7 @@ func BuildAddSubjectHandler(db *sql.DB, schema string) func(subjects.AddSubjectP
 			)
 		}
 		if exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("subject, %s, already exists", string(*subjectIn.SubjectID))
 			return subjects.NewAddSubjectBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -59,7 +59,7 @@ func BuildAddSubjectHandler(db *sql.DB, schema string) func(subjects.AddSubjectP
 		// Add the subject.
 		subjectOut, err := permsdb.AddSubject(tx, *subjectIn.SubjectID, *subjectIn.SubjectType)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(
@@ -69,7 +69,7 @@ func BuildAddSubjectHandler(db *sql.DB, schema string) func(subjects.AddSubjectP
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewAddSubjectInternalServerError().WithPayload(

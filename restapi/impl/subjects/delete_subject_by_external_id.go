@@ -54,25 +54,25 @@ func BuildDeleteSubjectByExternalIDHandler(
 		// Look up the subject.
 		subject, err := permsdb.GetSubject(tx, subjectID, subjectType)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteSubjectByExternalIDInternalServerError(err.Error())
 		}
 		if subject == nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("subject not found: %s:%s", string(subjectType), string(subjectID))
 			return deleteSubjectByExternalIDNotFound(reason)
 		}
 
 		// Delete the subject.
 		if err := permsdb.DeleteSubject(tx, *subject.ID); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			return deleteSubjectByExternalIDInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteSubjectByExternalIDInternalServerError(err.Error())
 		}

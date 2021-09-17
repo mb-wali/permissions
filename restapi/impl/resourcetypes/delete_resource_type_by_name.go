@@ -58,12 +58,12 @@ func BuildDeleteResourceTypeByNameHandler(
 		// Verify that the resource type exists.
 		resourceType, err := permsdb.GetResourceTypeByName(tx, &params.ResourceTypeName)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 		if resourceType == nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource type name not found: %s", params.ResourceTypeName)
 			return deleteResourceTypeByNameNotFound(reason)
 		}
@@ -71,26 +71,26 @@ func BuildDeleteResourceTypeByNameHandler(
 		// Verify that the resource type has no resources associated with it.
 		numResources, err := permsdb.CountResourcesOfType(tx, resourceType.ID)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 		if numResources != 0 {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("resource type has resources associated with it: %s", params.ResourceTypeName)
 			return deleteResourceTypeByNameBadRequest(reason)
 		}
 
 		// Delete the resource type.
 		if err := permsdb.DeleteResourceType(tx, resourceType.ID); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			return deleteResourceTypeByNameInternalServerError(err.Error())
 		}

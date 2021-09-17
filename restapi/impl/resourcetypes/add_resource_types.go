@@ -37,14 +37,14 @@ func BuildResourceTypesPostHandler(db *sql.DB, schema string) func(resource_type
 		// Check for a duplicate name.
 		duplicate, err := permsdb.GetResourceTypeByName(tx, resourceTypeIn.Name)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
 			)
 		}
 		if duplicate != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("a resource type named %s already exists", *resourceTypeIn.Name)
 			return resource_types.NewPostResourceTypesBadRequest().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -54,7 +54,7 @@ func BuildResourceTypesPostHandler(db *sql.DB, schema string) func(resource_type
 		// Save the resource type.
 		resourceTypeOut, err := permsdb.AddNewResourceType(tx, resourceTypeIn)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -62,7 +62,7 @@ func BuildResourceTypesPostHandler(db *sql.DB, schema string) func(resource_type
 		}
 
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := err.Error()
 			return resource_types.NewPostResourceTypesInternalServerError().WithPayload(
 				&models.ErrorOut{Reason: &reason},

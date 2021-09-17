@@ -33,7 +33,7 @@ func BuildListPermissionsHandler(
 			logger.Log.Error(err)
 			return internalServerError(err.Error())
 		}
-		defer tx.Commit()
+		defer tx.Commit() // nolint:errcheck
 
 		_, err = tx.Exec(fmt.Sprintf("SET search_path TO %s", schema))
 		if err != nil {

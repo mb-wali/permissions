@@ -41,7 +41,7 @@ func BuildDeleteSubjectHandler(db *sql.DB, schema string) func(subjects.DeleteSu
 		// Verify that the subject exists.
 		exists, err := permsdb.SubjectExists(tx, id)
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
@@ -49,7 +49,7 @@ func BuildDeleteSubjectHandler(db *sql.DB, schema string) func(subjects.DeleteSu
 			)
 		}
 		if !exists {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			reason := fmt.Sprintf("subject, %s, not found", string(id))
 			return subjects.NewDeleteSubjectNotFound().WithPayload(
 				&models.ErrorOut{Reason: &reason},
@@ -58,7 +58,7 @@ func BuildDeleteSubjectHandler(db *sql.DB, schema string) func(subjects.DeleteSu
 
 		// Delete the subject.
 		if err := permsdb.DeleteSubject(tx, id); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
@@ -68,7 +68,7 @@ func BuildDeleteSubjectHandler(db *sql.DB, schema string) func(subjects.DeleteSu
 
 		// Commit the transaction.
 		if err := tx.Commit(); err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint:errcheck
 			logger.Log.Error(err)
 			reason := err.Error()
 			return subjects.NewDeleteSubjectInternalServerError().WithPayload(
