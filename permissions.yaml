@@ -1,0 +1,2 @@
+db:
+  uri: postgresql://de:testpassword@db:5432/permissions?sslmode=disable
