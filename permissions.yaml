@@ -1,0 +1,9 @@
+listen_port: 60005
+db:
+  uri: "postgresql://de:testpassword@db:5432/permissions?sslmode=disable"
+  schema: "public"
+
+# (grouper) This DB does not exist.
+grouperdb:
+  uri: "postgresql://de:testpassword@db:5432/grouper?sslmode=disable"
+  folder_name_prefix: "iplant:de:docker-compose"
