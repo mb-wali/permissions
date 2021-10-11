@@ -11,7 +11,7 @@ RUN go install ./... \
 WORKDIR /
 
 # copy config file 
-COPY permissions.yml /etc/iplant/de/permissions.yml
+COPY permissions.yaml /etc/iplant/de/permissions.yaml
 
 ENTRYPOINT ["permissions", "--host", "0.0.0.0", "--port", "60005"]
 # CMD ["--help"]
@@ -33,7 +33,7 @@ LABEL org.label-schema.version="$descriptive_version"
 # docker build -t mbwali/permissions:no-grouper .
 
 # run 
-# docker rum -it -p 60005:60005 mbwali/permissions:latest
+# docker rum -it -p 60005:60005 mbwali/permissions:no-grouper
 
 # config
-# /etc/iplant/de/permissions.yml
+# /etc/iplant/de/permissions.yaml
